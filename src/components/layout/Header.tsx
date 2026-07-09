@@ -1,15 +1,17 @@
-import { Bell } from "lucide-react";
+import { Bell, Settings } from "lucide-react";
 
 interface HeaderProps {
   title?: string;
   showLogo?: boolean;
   showBell?: boolean;
+  showSettings?: boolean;
 }
 
 export function Header({
   title,
   showLogo = false,
   showBell = false,
+  showSettings = false,
 }: HeaderProps) {
   return (
     <header className="flex h-14 items-center justify-between px-5">
@@ -18,7 +20,7 @@ export function Header({
           <span className="text-[20px] font-bold tracking-tight text-primary">
             BUDDI.
           </span>
-          <span className="rounded-md bg-[#E8F5EE] px-1.5 py-0.5 text-[11px] font-semibold text-success">
+          <span className="whitespace-nowrap rounded-md bg-[#E8F5EE] px-1.5 py-0.5 text-[11px] font-semibold text-success">
             웰니스
           </span>
         </div>
@@ -26,7 +28,7 @@ export function Header({
         <h1 className="text-[20px] font-bold text-text-primary">{title}</h1>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {showBell && (
           <button
             type="button"
@@ -36,8 +38,17 @@ export function Header({
             <Bell size={22} strokeWidth={1.8} />
           </button>
         )}
-        {!showLogo && (
-          <span className="rounded-md bg-[#E8F5EE] px-1.5 py-0.5 text-[11px] font-semibold text-success">
+        {showSettings && (
+          <button
+            type="button"
+            aria-label="설정"
+            className="flex h-11 w-11 items-center justify-center text-text-secondary"
+          >
+            <Settings size={22} strokeWidth={1.8} />
+          </button>
+        )}
+        {!showLogo && !showSettings && (
+          <span className="whitespace-nowrap rounded-md bg-[#E8F5EE] px-1.5 py-0.5 text-[11px] font-semibold text-success">
             웰니스
           </span>
         )}

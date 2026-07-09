@@ -16,6 +16,11 @@ export const FIELDS = {
     totalStreakDays: "Total Streak Days",
     temperature: "Temperature",
     avatarUrl: "Avatar URL",
+    handle: "Handle",
+    mileage: "Mileage",
+    completedChallenges: "Completed Challenges",
+    buddyCount: "Buddy Count",
+    trustPercentile: "Trust Percentile",
   },
   challenges: {
     title: "Title",
@@ -43,6 +48,30 @@ export const FIELDS = {
     distanceKm: "Distance Km",
     avatarUrl: "Avatar URL",
     isRecommended: "Is Recommended",
+    district: "District",
+    intro: "Intro",
+    interests: "Interests",
+  },
+  teams: {
+    name: "Name",
+    points: "Points",
+    trend: "Trend",
+  },
+  teamChallenges: {
+    title: "Title",
+    company: "Company",
+    team: "Team",
+    teamName: "Team Name",
+    participants: "Participants",
+    completionRate: "Completion Rate",
+  },
+  storeItems: {
+    name: "Name",
+    brand: "Brand",
+    price: "Price",
+    badge: "Badge",
+    imageUrl: "Image URL",
+    isFeatured: "Is Featured",
   },
 } as const;
 
@@ -121,6 +150,16 @@ export async function getRecord(
   );
 }
 
+export async function createRecord(
+  table: string,
+  fields: Record<string, unknown>,
+): Promise<AirtableRecord> {
+  return airtableFetch<AirtableRecord>(encodeURIComponent(table), {
+    method: "POST",
+    body: JSON.stringify({ fields }),
+  });
+}
+
 export async function updateRecord(
   table: string,
   id: string,
@@ -140,4 +179,7 @@ export const TABLES = {
   challenges: "Challenges",
   userChallenges: "UserChallenges",
   buddies: "Buddies",
+  teams: "Teams",
+  teamChallenges: "TeamChallenges",
+  storeItems: "Store Items",
 } as const;

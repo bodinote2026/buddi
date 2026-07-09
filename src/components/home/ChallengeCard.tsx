@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera } from "lucide-react";
+import { Camera, Flame } from "lucide-react";
 import { CircularProgress } from "@/components/ui/CircularProgress";
 import { Badge } from "@/components/ui/Badge";
 import type { Challenge } from "@/lib/types";
@@ -32,8 +32,9 @@ export function ChallengeCard({
           <p className="mt-0.5 truncate text-[13px] text-text-secondary">
             {challenge.description}
           </p>
-          <Badge variant="primary" className="mt-2">
-            🔥 {challenge.streakDays}일 연속 달성
+          <Badge variant="success" className="mt-2 gap-1">
+            <Flame size={12} aria-hidden />
+            {challenge.streakDays}일 연속 달성
           </Badge>
         </div>
       </Link>

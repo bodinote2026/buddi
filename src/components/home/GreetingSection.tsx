@@ -1,3 +1,4 @@
+import { Timer } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import type { User } from "@/lib/types";
 
@@ -14,8 +15,12 @@ export function GreetingSection({ user }: GreetingSectionProps) {
           {user.name}님, 오늘도 함께해요
         </h1>
       </div>
-      <Badge variant="primary" className="mt-1 shrink-0 whitespace-nowrap">
-        🔥 {user.totalStreakDays}일 연속
+      <Badge
+        variant="primary"
+        className="mt-1 shrink-0 gap-1 whitespace-nowrap"
+      >
+        <Timer size={12} aria-hidden />
+        {user.totalStreakDays}일 연속
       </Badge>
     </section>
   );

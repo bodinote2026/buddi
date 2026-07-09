@@ -1,5 +1,13 @@
 import { FIELDS, type AirtableRecord } from "./airtable";
-import type { Buddy, Challenge, ExploreChallenge, User } from "./types";
+import type {
+  Buddy,
+  Challenge,
+  ExploreChallenge,
+  StoreItem,
+  Team,
+  TeamChallenge,
+  User,
+} from "./types";
 
 function asString(value: unknown, fallback = ""): string {
   if (typeof value === "string") return value;
@@ -11,6 +19,11 @@ function asNumber(value: unknown, fallback = 0): number {
   return typeof value === "number" && !Number.isNaN(value) ? value : fallback;
 }
 
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === "string");
+}
+
 function asAttachmentUrl(value: unknown): string {
   if (typeof value === "string") return value;
   if (Array.isArray(value) && value[0] && typeof value[0] === "object") {
@@ -18,6 +31,16 @@ function asAttachmentUrl(value: unknown): string {
     if (typeof first.url === "string") return first.url;
   }
   return "";
+}
+
+function asTrend(value: unknown): Team["trend"] {
+  if (value === "상승" || value === "유지" || value === "하락") return value;
+  return "유지";
+}
+
+function asBadge(value: unknown): StoreItem["badge"] {
+  if (value === "인기" || value === "신상") return value;
+  return null;
 }
 
 export function mapUser(record: AirtableRecord): User {
@@ -29,6 +52,11 @@ export function mapUser(record: AirtableRecord): User {
     totalStreakDays: asNumber(f[U.totalStreakDays]),
     temperature: asNumber(f[U.temperature]),
     avatarUrl: asAttachmentUrl(f[U.avatarUrl]),
+    handle: asString(f[U.handle], "jiwoo_run"),
+    mileage: asNumber(f[U.mileage]),
+    completedChallenges: asNumber(f[U.completedChallenges]),
+    buddyCount: asNumber(f[U.buddyCount]),
+    trustPercentile: asNumber(f[U.trustPercentile]),
   };
 }
 
@@ -68,8 +96,49 @@ export function mapBuddy(record: AirtableRecord): Buddy {
     temperature: asNumber(f[B.temperature]),
     category: asString(f[B.category]),
     distanceKm: asNumber(f[B.distanceKm]),
+    district: asString(f[B.district]),
+    intro: asString(f[B.intro]),
+    interests: asStringArray(f[B.interests]),
     avatarUrl:
       asAttachmentUrl(f[B.avatarUrl]) ||
       `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name || record.id)}`,
+  };
+}
+
+export function mapTeam(record: AirtableRecord): Team {
+  const f = record.fields;
+  const T = FIELDS.teams;
+  return {
+    id: record.id,
+    name: asString(f[T.name]),
+    points: asNumber(f[T.points]),
+    trend: asTrend(f[T.trend]),
+  };
+}
+
+export function mapTeamChallenge(record: AirtableRecord): TeamChallenge {
+  const f = record.fields;
+  const TC = FIELDS.teamChallenges;
+  return {
+    id: record.id,
+    title: asString(f[TC.title]),
+    company: asString(f[TC.company]),
+    teamName: asString(f[TC.teamName]),
+    participants: asNumber(f[TC.participants]),
+    completionRate: asNumber(f[TC.completionRate]),
+  };
+}
+
+export function mapStoreItem(record: AirtableRecord): StoreItem {
+  const f = record.fields;
+  const S = FIELDS.storeItems;
+  return {
+    id: record.id,
+    name: asString(f[S.name]),
+    brand: asString(f[S.brand]),
+    price: asNumber(f[S.price]),
+    badge: asBadge(f[S.badge]),
+    imageUrl: asAttachmentUrl(f[S.imageUrl]) || undefined,
+    isFeatured: Boolean(f[S.isFeatured]),
   };
 }

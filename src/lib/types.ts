@@ -23,6 +23,9 @@ export interface Buddy {
   category: string;
   distanceKm: number;
   avatarUrl: string;
+  district?: string;
+  intro?: string;
+  interests?: string[];
 }
 
 export interface User {
@@ -31,6 +34,39 @@ export interface User {
   totalStreakDays: number;
   temperature?: number;
   avatarUrl?: string;
+  handle?: string;
+  mileage?: number;
+  completedChallenges?: number;
+  buddyCount?: number;
+  trustPercentile?: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  points: number;
+  trend: "상승" | "유지" | "하락";
+}
+
+export interface TeamChallenge {
+  id: string;
+  title: string;
+  company: string;
+  teamName: string;
+  participants: number;
+  completionRate: number;
+  checkedInToday?: boolean;
+}
+
+export interface StoreItem {
+  id: string;
+  name: string;
+  brand: string;
+  price: number;
+  badge?: "인기" | "신상" | null;
+  imageUrl?: string;
+  isFeatured: boolean;
+  emoji?: string;
 }
 
 export interface ApiResponse<T> {

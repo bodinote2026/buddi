@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { MapPin, MessageCircle } from "lucide-react";
+import { formatTemperature } from "@/lib/format";
 import type { Buddy } from "@/lib/types";
 
 interface BuddyCardProps {
@@ -31,18 +31,13 @@ export function BuddyCard({
           sizes="260px"
           priority={priority}
         />
-        <Badge
-          variant="primary"
-          className="absolute right-2.5 top-2.5 bg-primary text-[11px] font-bold text-white"
-        >
-          {buddy.temperature}°
-        </Badge>
+        <span className="absolute right-2.5 top-2.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-text-primary shadow-sm">
+          {formatTemperature(buddy.temperature)}
+        </span>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3.5">
-        <Badge variant="primary" className="w-fit">
-          {buddy.category}
-        </Badge>
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5">
+        <p className="text-[12px] font-medium text-primary">{buddy.category}</p>
         <h3 className="text-[15px] font-semibold text-text-primary">
           {buddy.name} · {buddy.age}
         </h3>
@@ -52,8 +47,9 @@ export function BuddyCard({
         </p>
         <Link
           href={`/chat/${buddy.id}`}
-          className="mt-auto flex h-11 w-full items-center justify-center rounded-full bg-primary text-[14px] font-semibold text-white transition-colors hover:bg-primary-dark"
+          className="mt-auto flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary text-[14px] font-semibold text-white transition-colors hover:bg-primary-dark"
         >
+          <MessageCircle size={16} aria-hidden />
           채팅하기
         </Link>
       </div>
