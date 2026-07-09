@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAirtableConfigured, listRecords, TABLES } from "@/lib/airtable";
+import {
+  FIELDS,
+  isAirtableConfigured,
+  listRecords,
+  TABLES,
+} from "@/lib/airtable";
 import { mapBuddy } from "@/lib/mappers";
 import { MOCK_BUDDIES } from "@/lib/mock-data";
 import type { ApiResponse, Buddy } from "@/lib/types";
@@ -16,11 +21,11 @@ export async function GET(request: NextRequest) {
     }
 
     const params: Record<string, string> = {
-      "sort[0][field]": "temperature",
+      "sort[0][field]": FIELDS.buddies.temperature,
       "sort[0][direction]": "desc",
     };
     if (recommended) {
-      params.filterByFormula = "isRecommended=TRUE()";
+      params.filterByFormula = `{${FIELDS.buddies.isRecommended}}=TRUE()`;
     }
 
     const records = await listRecords(TABLES.buddies, params);

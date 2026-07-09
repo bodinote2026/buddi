@@ -9,6 +9,43 @@ interface AirtableListResponse {
   offset?: string;
 }
 
+/** Airtable field names (Title Case + spaces) */
+export const FIELDS = {
+  users: {
+    name: "Name",
+    totalStreakDays: "Total Streak Days",
+    temperature: "Temperature",
+    avatarUrl: "Avatar URL",
+  },
+  challenges: {
+    title: "Title",
+    emoji: "Emoji",
+    description: "Description",
+    category: "Category",
+    isActive: "Is Active",
+  },
+  userChallenges: {
+    user: "User",
+    challenge: "Challenge",
+    progress: "Progress",
+    streakDays: "Streak Days",
+    status: "Status",
+    lastCheckinAt: "Last Checkin At",
+    challengeTitle: "Challenge Title",
+    challengeEmoji: "Challenge Emoji",
+    challengeDescription: "Challenge Description",
+  },
+  buddies: {
+    name: "Name",
+    age: "Age",
+    temperature: "Temperature",
+    category: "Category",
+    distanceKm: "Distance Km",
+    avatarUrl: "Avatar URL",
+    isRecommended: "Is Recommended",
+  },
+} as const;
+
 function getBaseUrl() {
   const baseId = process.env.AIRTABLE_BASE_ID;
   if (!baseId) throw new Error("AIRTABLE_BASE_ID가 설정되지 않았습니다.");

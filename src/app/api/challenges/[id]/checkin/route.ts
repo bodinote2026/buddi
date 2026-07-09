@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  FIELDS,
   getRecord,
   isAirtableConfigured,
   updateRecord,
@@ -15,6 +16,7 @@ interface RouteContext {
 
 export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const UC = FIELDS.userChallenges;
 
   try {
     if (!isAirtableConfigured()) {
@@ -37,13 +39,13 @@ export async function POST(_request: Request, context: RouteContext) {
     }
 
     const current = await getRecord(TABLES.userChallenges, id);
-    const progress = Number(current.fields.progress ?? 0);
-    const streakDays = Number(current.fields.streakDays ?? 0);
+    const progress = Number(current.fields[UC.progress] ?? 0);
+    const streakDays = Number(current.fields[UC.streakDays] ?? 0);
 
     const updated = await updateRecord(TABLES.userChallenges, id, {
-      progress: Math.min(100, progress + 5),
-      streakDays: streakDays + 1,
-      lastCheckinAt: new Date().toISOString().slice(0, 10),
+      [UC.progress]: Math.min(100, progress + 5),
+      [UC.streakDays]: streakDays + 1,
+      [UC.lastCheckinAt]: new Date().toISOString().slice(0, 10),
     });
 
     return NextResponse.json({

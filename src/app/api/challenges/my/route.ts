@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { isAirtableConfigured, listRecords, TABLES } from "@/lib/airtable";
+import {
+  FIELDS,
+  isAirtableConfigured,
+  listRecords,
+  TABLES,
+} from "@/lib/airtable";
 import { mapUserChallenge } from "@/lib/mappers";
 import { MOCK_CHALLENGES } from "@/lib/mock-data";
 import type { ApiResponse, Challenge } from "@/lib/types";
@@ -14,7 +19,7 @@ export async function GET() {
     }
 
     const records = await listRecords(TABLES.userChallenges, {
-      filterByFormula: '{status}="진행중"',
+      filterByFormula: `{${FIELDS.userChallenges.status}}="진행중"`,
     });
 
     return NextResponse.json({
