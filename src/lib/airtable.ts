@@ -16,7 +16,7 @@ export const FIELDS = {
     totalStreakDays: "Total Streak Days",
     temperature: "Temperature",
     avatarUrl: "Avatar URL",
-    handle: "Handle",
+    nickname: "Nickname",
     mileage: "Mileage",
     completedChallenges: "Completed Challenges",
     buddyCount: "Buddy Count",

@@ -52,7 +52,7 @@ export function mapUser(record: AirtableRecord): User {
     totalStreakDays: asNumber(f[U.totalStreakDays]),
     temperature: asNumber(f[U.temperature]),
     avatarUrl: asAttachmentUrl(f[U.avatarUrl]),
-    handle: asString(f[U.handle], "jiwoo_run"),
+    nickname: asString(f[U.nickname], "jiwoo_run"),
     mileage: asNumber(f[U.mileage]),
     completedChallenges: asNumber(f[U.completedChallenges]),
     buddyCount: asNumber(f[U.buddyCount]),

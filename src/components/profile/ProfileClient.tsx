@@ -66,7 +66,7 @@ function ProfileContent({ user }: { user: User }) {
             {user.name}
           </h2>
           <p className="mt-0.5 text-[14px] text-text-secondary">
-            @{user.handle ?? "buddi_user"}
+            @{user.nickname ?? "buddi_user"}
           </p>
           {typeof user.trustPercentile === "number" &&
             user.trustPercentile > 0 && (
@@ -208,7 +208,7 @@ export function ProfileClient({ sessionUser }: ProfileClientProps) {
     id: session.user.airtableId ?? "session-user",
     name: session.user.name ?? "버디 유저",
     avatarUrl: session.user.image ?? MOCK_USER.avatarUrl,
-    handle: session.user.email?.split("@")[0] ?? "buddi_user",
+    nickname: session.user.email?.split("@")[0] ?? "buddi_user",
     totalStreakDays: 0,
     temperature: 36.5,
     mileage: 0,

@@ -35,7 +35,7 @@ export async function GET() {
         totalStreakDays: 0,
         temperature: 36.5,
         avatarUrl: session?.user?.image ?? undefined,
-        handle:
+        nickname:
           session?.user?.email?.split("@")[0] ??
           session?.user?.name?.replace(/\s+/g, "_").toLowerCase() ??
           "buddi_user",

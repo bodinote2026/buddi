@@ -34,7 +34,7 @@ export interface User {
   totalStreakDays: number;
   temperature?: number;
   avatarUrl?: string;
-  handle?: string;
+  nickname?: string;
   mileage?: number;
   completedChallenges?: number;
   buddyCount?: number;
