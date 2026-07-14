@@ -21,6 +21,9 @@ export const FIELDS = {
     completedChallenges: "Completed Challenges",
     buddyCount: "Buddy Count",
     trustPercentile: "Trust Percentile",
+    provider: "Provider",
+    providerId: "Provider ID",
+    email: "Email",
   },
   challenges: {
     title: "Title",
@@ -183,3 +186,68 @@ export const TABLES = {
   teamChallenges: "TeamChallenges",
   storeItems: "Store Items",
 } as const;
+
+function escapeFormulaValue(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+export async function findUserByProvider(
+  provider: string,
+  providerId: string,
+): Promise<AirtableRecord | null> {
+  const U = FIELDS.users;
+  const records = await listRecords(TABLES.users, {
+    filterByFormula: `AND({${U.provider}}="${escapeFormulaValue(provider)}",{${U.providerId}}="${escapeFormulaValue(providerId)}")`,
+    maxRecords: "1",
+  });
+  return records[0] ?? null;
+}
+
+export interface CreateUserInput {
+  provider: string;
+  providerId: string;
+  name: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+}
+
+export async function createUser(
+  input: CreateUserInput,
+): Promise<AirtableRecord> {
+  const U = FIELDS.users;
+  const fields: Record<string, unknown> = {
+    [U.name]: input.name || "버디 유저",
+    [U.provider]: input.provider,
+    [U.providerId]: input.providerId,
+    [U.totalStreakDays]: 0,
+    [U.temperature]: 36.5,
+    [U.mileage]: 0,
+    [U.completedChallenges]: 0,
+    [U.buddyCount]: 0,
+  };
+  if (input.email) fields[U.email] = input.email;
+  if (input.avatarUrl) fields[U.avatarUrl] = input.avatarUrl;
+
+  return createRecord(TABLES.users, fields);
+}
+
+/** Find existing social user or create with defaults. Mock id when Airtable is off. */
+export async function upsertSocialUser(
+  input: CreateUserInput,
+): Promise<{ id: string; created: boolean }> {
+  if (!isAirtableConfigured()) {
+    return {
+      id: `mock-${input.provider}-${input.providerId}`,
+      created: true,
+    };
+  }
+
+  const existing = await findUserByProvider(input.provider, input.providerId);
+  if (existing) {
+    return { id: existing.id, created: false };
+  }
+
+  const created = await createUser(input);
+  return { id: created.id, created: true };
+}
+

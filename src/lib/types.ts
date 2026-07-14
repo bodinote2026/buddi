@@ -39,6 +39,9 @@ export interface User {
   completedChallenges?: number;
   buddyCount?: number;
   trustPercentile?: number;
+  provider?: string;
+  providerId?: string;
+  email?: string;
 }
 
 export interface Team {

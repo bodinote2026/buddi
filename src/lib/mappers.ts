@@ -57,6 +57,9 @@ export function mapUser(record: AirtableRecord): User {
     completedChallenges: asNumber(f[U.completedChallenges]),
     buddyCount: asNumber(f[U.buddyCount]),
     trustPercentile: asNumber(f[U.trustPercentile]),
+    provider: asString(f[U.provider]) || undefined,
+    providerId: asString(f[U.providerId]) || undefined,
+    email: asString(f[U.email]) || undefined,
   };
 }
 

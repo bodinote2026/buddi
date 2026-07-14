@@ -8,6 +8,21 @@ const nextConfig: NextConfig = {
         hostname: "api.dicebear.com",
         pathname: "/**",
       },
+      {
+        protocol: "http",
+        hostname: "k.kakaocdn.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "k.kakaocdn.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.kakaocdn.net",
+        pathname: "/**",
+      },
     ],
   },
 };
