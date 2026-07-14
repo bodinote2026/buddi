@@ -102,21 +102,24 @@ async function sleep(ms: number) {
 
 export async function airtableFetch<T = AirtableListResponse>(
   path: string,
-  init?: RequestInit,
+  init?: RequestInit & { skipCache?: boolean },
 ): Promise<T> {
   const url = `${getBaseUrl()}/${path}`;
   const method = init?.method ?? "GET";
   const isRead = method === "GET";
+  const { skipCache, ...requestInit } = init ?? {};
 
   const doFetch = async () =>
     fetch(url, {
-      ...init,
+      ...requestInit,
       headers: {
         Authorization: `Bearer ${getToken()}`,
         "Content-Type": "application/json",
-        ...init?.headers,
+        ...requestInit.headers,
       },
-      ...(isRead ? { next: { revalidate: 60 } } : { cache: "no-store" }),
+      ...(isRead && !skipCache
+        ? { next: { revalidate: 60 } }
+        : { cache: "no-store" }),
     });
 
   let res = await doFetch();
@@ -150,8 +153,10 @@ export async function getRecord(
   table: string,
   id: string,
 ): Promise<AirtableRecord> {
+  // Always fresh — used for session user after profile/onboarding writes
   return airtableFetch<AirtableRecord>(
     `${encodeURIComponent(table)}/${id}`,
+    { skipCache: true },
   );
 }
 

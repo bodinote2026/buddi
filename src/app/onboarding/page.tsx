@@ -2,20 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ui/Toast";
 import { needsOnboarding } from "@/lib/format";
+import { fetchMe, ME_API_KEY } from "@/lib/me";
 import type { ApiResponse, User } from "@/lib/types";
-
-async function fetcher(url: string): Promise<User> {
-  const res = await fetch(url);
-  const json = (await res.json()) as ApiResponse<User>;
-  if (!res.ok || !json.data) {
-    throw new Error(json.error ?? "프로필을 불러오지 못했어요.");
-  }
-  return json.data;
-}
 
 function OnboardingForm({
   initial,
@@ -25,6 +17,7 @@ function OnboardingForm({
   fallbackNickname?: string | null;
 }) {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { showToast } = useToast();
   const [name, setName] = useState(initial.name ?? "");
   const [nickname, setNickname] = useState(
@@ -43,7 +36,7 @@ function OnboardingForm({
     if (!canSubmit || saving) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/me", {
+      const res = await fetch(ME_API_KEY, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,11 +47,16 @@ function OnboardingForm({
         }),
       });
       const json = (await res.json()) as ApiResponse<User>;
-      if (!res.ok || json.error) {
+      if (!res.ok || json.error || !json.data) {
         throw new Error(json.error ?? "저장에 실패했어요.");
       }
+
+      // Update shared SWR cache before navigate so OnboardingGuard
+      // does not bounce back to /onboarding with stale empty company/team.
+      await mutate(ME_API_KEY, json.data, { revalidate: false });
       showToast("프로필이 저장되었어요.");
       router.replace("/");
+      router.refresh();
     } catch (err) {
       showToast(
         err instanceof Error ? err.message : "저장에 실패했어요.",
@@ -141,8 +139,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { data: me, isLoading } = useSWR(
-    status === "authenticated" ? "/api/me" : null,
-    fetcher,
+    status === "authenticated" ? ME_API_KEY : null,
+    fetchMe,
   );
 
   useEffect(() => {

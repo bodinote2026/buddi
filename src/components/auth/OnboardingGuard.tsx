@@ -5,19 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
 import { needsOnboarding } from "@/lib/format";
-import type { ApiResponse, User } from "@/lib/types";
-
-async function fetcher(url: string): Promise<User> {
-  const res = await fetch(url);
-  const json = (await res.json()) as ApiResponse<User>;
-  if (!res.ok || !json.data) {
-    throw new Error(json.error ?? "failed");
-  }
-  return json.data;
-}
+import { fetchMe, ME_API_KEY } from "@/lib/me";
 
 /**
  * Redirects authenticated users with incomplete Company/Team to /onboarding.
+ * Always uses replace() so history does not stack onboarding entries.
  * Guests are never redirected (demo browsing remains free).
  */
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
@@ -27,8 +19,8 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const onOnboarding = pathname === "/onboarding";
 
   const { data: me } = useSWR(
-    status === "authenticated" ? "/api/me" : null,
-    fetcher,
+    status === "authenticated" ? ME_API_KEY : null,
+    fetchMe,
     { revalidateOnFocus: true },
   );
 

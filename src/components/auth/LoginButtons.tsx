@@ -42,7 +42,7 @@ export function LoginButtons() {
         <button
           key={provider.id}
           type="button"
-          onClick={() => signIn(provider.id, { callbackUrl: "/profile" })}
+          onClick={() => signIn(provider.id, { callbackUrl: "/" })}
           className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-semibold transition-colors ${provider.className}`}
         >
           {provider.icon}
