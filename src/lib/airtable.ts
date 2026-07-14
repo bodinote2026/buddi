@@ -206,7 +206,8 @@ export async function findUserByProvider(
 export interface CreateUserInput {
   provider: string;
   providerId: string;
-  name: string;
+  /** Kakao nickname → Nickname field. Name is left empty for Kakao. */
+  nickname: string;
   email?: string | null;
   avatarUrl?: string | null;
 }
@@ -216,7 +217,8 @@ export async function createUser(
 ): Promise<AirtableRecord> {
   const U = FIELDS.users;
   const fields: Record<string, unknown> = {
-    [U.name]: input.name || "버디 유저",
+    [U.name]: "",
+    [U.nickname]: input.nickname || "buddi_user",
     [U.provider]: input.provider,
     [U.providerId]: input.providerId,
     [U.totalStreakDays]: 0,

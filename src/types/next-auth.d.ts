@@ -10,6 +10,7 @@ declare module "next-auth" {
       airtableId?: string;
       provider?: string;
       providerId?: string;
+      nickname?: string;
     };
   }
 }
@@ -19,5 +20,6 @@ declare module "next-auth/jwt" {
     airtableId?: string;
     provider?: string;
     providerId?: string;
+    nickname?: string;
   }
 }

@@ -12,7 +12,7 @@ export function GreetingSection({ user }: GreetingSectionProps) {
       <div className="min-w-0">
         <p className="text-[14px] text-text-secondary">안녕하세요 👋</p>
         <h1 className="mt-1 text-[22px] font-bold leading-snug text-text-primary">
-          {user.name}님, 오늘도 함께해요
+          {user.displayName}님, 오늘도 함께해요
         </h1>
       </div>
       <Badge

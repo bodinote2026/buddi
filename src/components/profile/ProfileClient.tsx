@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -12,12 +13,14 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { LoginButtons } from "@/components/auth/LoginButtons";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
 import {
   CONNECTED_DEVICES,
   MOCK_USER,
   PROFILE_SETTINGS,
 } from "@/lib/mock-data";
-import { formatTemperature } from "@/lib/format";
+import { formatTemperature, getDisplayName } from "@/lib/format";
 import type { User } from "@/lib/types";
 
 interface ProfileClientProps {
@@ -44,17 +47,70 @@ function LoginGate() {
   );
 }
 
-function ProfileContent({ user }: { user: User }) {
+function ProfileContent({
+  user,
+  onUserChange,
+}: {
+  user: User;
+  onUserChange: (user: User) => void;
+}) {
+  const { showToast } = useToast();
+  const [editOpen, setEditOpen] = useState(false);
+  const [name, setName] = useState(user.name);
+  const [nickname, setNickname] = useState(user.nickname ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const canSave = nickname.trim().length > 0;
+
+  function openEdit() {
+    setName(user.name);
+    setNickname(user.nickname ?? "");
+    setEditOpen(true);
+  }
+
+  async function handleSave() {
+    if (!canSave || saving) return;
+    setSaving(true);
+    const prev = user;
+    const nextName = name.trim();
+    const nextNickname = nickname.trim();
+    const optimistic: User = {
+      ...user,
+      name: nextName,
+      nickname: nextNickname,
+      displayName: getDisplayName({ name: nextName, nickname: nextNickname }),
+    };
+    onUserChange(optimistic);
+    setEditOpen(false);
+
+    try {
+      const res = await fetch("/api/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nextName, nickname: nextNickname }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? "저장 실패");
+      if (json.data) onUserChange(json.data);
+      showToast("프로필이 저장되었어요.");
+    } catch {
+      onUserChange(prev);
+      showToast("프로필 저장에 실패했어요.", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
-      <Header title="프로필" showSettings />
+      <Header title="프로필" showSettings onSettingsClick={openEdit} />
       <div className="space-y-6 px-5 pb-4">
         <section className="flex flex-col items-center pt-2 text-center">
           <div className="relative h-[100px] w-[100px] overflow-hidden rounded-full border-[3px] border-primary-light bg-primary-light">
             {user.avatarUrl && (
               <Image
                 src={user.avatarUrl}
-                alt={`${user.name} 프로필 사진`}
+                alt={`${user.displayName} 프로필 사진`}
                 fill
                 className="object-cover"
                 unoptimized
@@ -63,7 +119,7 @@ function ProfileContent({ user }: { user: User }) {
             )}
           </div>
           <h2 className="mt-3 text-[22px] font-bold text-text-primary">
-            {user.name}
+            {user.displayName}
           </h2>
           <p className="mt-0.5 text-[14px] text-text-secondary">
             @{user.nickname ?? "buddi_user"}
@@ -179,12 +235,50 @@ function ProfileContent({ user }: { user: User }) {
           </ul>
         </section>
       </div>
+
+      <Modal
+        open={editOpen}
+        title="프로필 편집"
+        onClose={() => !saving && setEditOpen(false)}
+      >
+        <label className="mb-3 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            이름
+          </span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="실명을 입력해주세요 (선택)"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <label className="mb-5 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            별명
+          </span>
+          <input
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="다른 사람에게 보여질 별명"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={!canSave || saving}
+          onClick={handleSave}
+          className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-white disabled:opacity-40"
+        >
+          저장하기
+        </button>
+      </Modal>
     </>
   );
 }
 
 export function ProfileClient({ sessionUser }: ProfileClientProps) {
   const { data: session, status } = useSession();
+  const [userOverride, setUserOverride] = useState<User | null>(null);
 
   if (status === "loading") {
     return (
@@ -203,12 +297,20 @@ export function ProfileClient({ sessionUser }: ProfileClientProps) {
     return <LoginGate />;
   }
 
-  const user: User = sessionUser ?? {
+  const nickname =
+    sessionUser?.nickname ||
+    session.user.nickname ||
+    session.user.name ||
+    "buddi_user";
+  const name = sessionUser?.name ?? "";
+
+  const baseUser: User = sessionUser ?? {
     ...MOCK_USER,
     id: session.user.airtableId ?? "session-user",
-    name: session.user.name ?? "버디 유저",
+    name,
+    nickname,
+    displayName: getDisplayName({ name, nickname }),
     avatarUrl: session.user.image ?? MOCK_USER.avatarUrl,
-    nickname: session.user.email?.split("@")[0] ?? "buddi_user",
     totalStreakDays: 0,
     temperature: 36.5,
     mileage: 0,
@@ -217,5 +319,7 @@ export function ProfileClient({ sessionUser }: ProfileClientProps) {
     trustPercentile: undefined,
   };
 
-  return <ProfileContent user={user} />;
+  const user = userOverride ?? baseUser;
+
+  return <ProfileContent user={user} onUserChange={setUserOverride} />;
 }

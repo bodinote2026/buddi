@@ -15,6 +15,7 @@ export const MOCK_USER: User = {
   temperature: 36.9,
   avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=hanjiwoo",
   nickname: "jiwoo_run",
+  displayName: "한지우",
   mileage: 2450,
   completedChallenges: 28,
   buddyCount: 17,

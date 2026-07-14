@@ -1,4 +1,5 @@
 import { FIELDS, type AirtableRecord } from "./airtable";
+import { getDisplayName } from "./format";
 import type {
   Buddy,
   Challenge,
@@ -46,17 +47,20 @@ function asBadge(value: unknown): StoreItem["badge"] {
 export function mapUser(record: AirtableRecord): User {
   const f = record.fields;
   const U = FIELDS.users;
+  const name = asString(f[U.name]);
+  const nickname = asString(f[U.nickname], "jiwoo_run");
   return {
     id: record.id,
-    name: asString(f[U.name], "한지우"),
+    name,
     totalStreakDays: asNumber(f[U.totalStreakDays]),
     temperature: asNumber(f[U.temperature]),
     avatarUrl: asAttachmentUrl(f[U.avatarUrl]),
-    nickname: asString(f[U.nickname], "jiwoo_run"),
+    nickname,
+    displayName: getDisplayName({ name, nickname }),
     mileage: asNumber(f[U.mileage]),
     completedChallenges: asNumber(f[U.completedChallenges]),
     buddyCount: asNumber(f[U.buddyCount]),
-    trustPercentile: asNumber(f[U.trustPercentile]),
+    trustPercentile: asNumber(f[U.trustPercentile]) || undefined,
     provider: asString(f[U.provider]) || undefined,
     providerId: asString(f[U.providerId]) || undefined,
     email: asString(f[U.email]) || undefined,

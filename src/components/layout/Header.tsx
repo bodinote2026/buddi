@@ -5,6 +5,7 @@ interface HeaderProps {
   showLogo?: boolean;
   showBell?: boolean;
   showSettings?: boolean;
+  onSettingsClick?: () => void;
 }
 
 export function Header({
@@ -12,6 +13,7 @@ export function Header({
   showLogo = false,
   showBell = false,
   showSettings = false,
+  onSettingsClick,
 }: HeaderProps) {
   return (
     <header className="flex h-14 items-center justify-between px-5">
@@ -41,7 +43,8 @@ export function Header({
         {showSettings && (
           <button
             type="button"
-            aria-label="설정"
+            aria-label="프로필 편집"
+            onClick={onSettingsClick}
             className="flex h-11 w-11 items-center justify-center text-text-secondary"
           >
             <Settings size={22} strokeWidth={1.8} />

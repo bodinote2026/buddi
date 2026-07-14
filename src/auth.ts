@@ -6,6 +6,9 @@ import { upsertSocialUser } from "@/lib/airtable";
 /**
  * Provider list — add Google (etc.) here later without restructuring auth.
  * Env vars: AUTH_KAKAO_ID / AUTH_KAKAO_SECRET (Auth.js inferred).
+ *
+ * Kakao maps profile nickname → user.name (no real name). We store that in
+ * Nickname and leave Name empty on create.
  */
 const providers: Provider[] = [Kakao];
 
@@ -23,14 +26,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await upsertSocialUser({
           provider: account.provider,
           providerId: account.providerAccountId,
-          name: user.name ?? "버디 유저",
+          nickname: user.name?.trim() || "buddi_user",
           email: user.email,
           avatarUrl: user.image,
         });
         return true;
       } catch (err) {
         console.error("[auth] Airtable upsert failed", err);
-        // Allow login in mock/dev even if Airtable write fails
         return true;
       }
     },
@@ -39,18 +41,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.provider = account.provider;
         token.providerId = account.providerAccountId;
 
+        const nickname =
+          user?.name?.trim() ||
+          (typeof token.name === "string" ? token.name.trim() : "") ||
+          "buddi_user";
+
         try {
           const result = await upsertSocialUser({
             provider: account.provider,
             providerId: account.providerAccountId,
-            name: user?.name ?? (token.name as string) ?? "버디 유저",
+            nickname,
             email: user?.email ?? (token.email as string | undefined),
             avatarUrl: user?.image ?? (token.picture as string | undefined),
           });
           token.airtableId = result.id;
+          token.nickname = nickname;
         } catch (err) {
           console.error("[auth] jwt upsert failed", err);
           token.airtableId = `mock-${account.provider}-${account.providerAccountId}`;
+          token.nickname = nickname;
         }
       }
 
@@ -65,6 +74,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.airtableId = token.airtableId;
         session.user.provider = token.provider;
         session.user.providerId = token.providerId;
+        session.user.nickname =
+          (token.nickname as string | undefined) ||
+          session.user.name ||
+          undefined;
       }
       return session;
     },

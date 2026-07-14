@@ -35,6 +35,8 @@ export interface User {
   temperature?: number;
   avatarUrl?: string;
   nickname?: string;
+  /** name || nickname — for UI display */
+  displayName: string;
   mileage?: number;
   completedChallenges?: number;
   buddyCount?: number;
