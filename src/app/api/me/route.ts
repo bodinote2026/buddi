@@ -28,6 +28,8 @@ function sessionFallbackUser(
     name,
     nickname,
     displayName: getDisplayName({ name, nickname }),
+    company: "",
+    team: "",
     totalStreakDays: 0,
     temperature: 36.5,
     avatarUrl: session?.user?.image ?? undefined,
@@ -106,6 +108,8 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as {
       name?: string;
       nickname?: string;
+      company?: string;
+      team?: string;
     };
 
     const nickname = body.nickname?.trim() ?? "";
@@ -120,13 +124,28 @@ export async function PATCH(request: Request) {
     }
 
     const name = body.name?.trim() ?? "";
+    const hasOrgFields = "company" in body || "team" in body;
+    const company = body.company?.trim() ?? "";
+    const team = body.team?.trim() ?? "";
+
+    if (hasOrgFields && (!company || !team)) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: "회사와 부서는 필수입니다.",
+        } satisfies ApiResponse<User>,
+        { status: 400 },
+      );
+    }
 
     if (!isAirtableConfigured() || airtableId.startsWith("mock-")) {
+      const base = sessionFallbackUser(airtableId, session);
       const updated: User = {
-        ...sessionFallbackUser(airtableId, session),
+        ...base,
         name,
         nickname,
         displayName: getDisplayName({ name, nickname }),
+        ...(hasOrgFields ? { company, team } : {}),
       };
       return NextResponse.json({
         data: updated,
@@ -135,10 +154,16 @@ export async function PATCH(request: Request) {
     }
 
     const U = FIELDS.users;
-    const updated = await updateRecord(TABLES.users, airtableId, {
+    const fields: Record<string, unknown> = {
       [U.name]: name,
       [U.nickname]: nickname,
-    });
+    };
+    if (hasOrgFields) {
+      fields[U.company] = company;
+      fields[U.team] = team;
+    }
+
+    const updated = await updateRecord(TABLES.users, airtableId, fields);
 
     return NextResponse.json({
       data: mapUser(updated),

@@ -57,6 +57,8 @@ export function mapUser(record: AirtableRecord): User {
     avatarUrl: asAttachmentUrl(f[U.avatarUrl]),
     nickname,
     displayName: getDisplayName({ name, nickname }),
+    company: asString(f[U.company]) || undefined,
+    team: asString(f[U.team]) || undefined,
     mileage: asNumber(f[U.mileage]),
     completedChallenges: asNumber(f[U.completedChallenges]),
     buddyCount: asNumber(f[U.buddyCount]),

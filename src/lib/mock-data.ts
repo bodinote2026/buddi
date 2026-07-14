@@ -16,6 +16,8 @@ export const MOCK_USER: User = {
   avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=hanjiwoo",
   nickname: "jiwoo_run",
   displayName: "한지우",
+  company: "바디노트",
+  team: "마케팅 1팀",
   mileage: 2450,
   completedChallenges: 28,
   buddyCount: 17,

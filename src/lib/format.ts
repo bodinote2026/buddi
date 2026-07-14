@@ -14,3 +14,11 @@ export function getDisplayName(user: {
   if (name) return name;
   return user.nickname?.trim() || "버디 유저";
 }
+
+/** Onboarding incomplete if Company or Team is missing. */
+export function needsOnboarding(user: {
+  company?: string | null;
+  team?: string | null;
+}): boolean {
+  return !user.company?.trim() || !user.team?.trim();
+}

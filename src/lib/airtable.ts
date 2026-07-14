@@ -17,6 +17,8 @@ export const FIELDS = {
     temperature: "Temperature",
     avatarUrl: "Avatar URL",
     nickname: "Nickname",
+    company: "Company",
+    team: "Team",
     mileage: "Mileage",
     completedChallenges: "Completed Challenges",
     buddyCount: "Buddy Count",
@@ -219,6 +221,8 @@ export async function createUser(
   const fields: Record<string, unknown> = {
     [U.name]: "",
     [U.nickname]: input.nickname || "buddi_user",
+    [U.company]: "",
+    [U.team]: "",
     [U.provider]: input.provider,
     [U.providerId]: input.providerId,
     [U.totalStreakDays]: 0,

@@ -37,6 +37,8 @@ export interface User {
   nickname?: string;
   /** name || nickname — for UI display */
   displayName: string;
+  company?: string;
+  team?: string;
   mileage?: number;
   completedChallenges?: number;
   buddyCount?: number;
