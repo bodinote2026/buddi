@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import {
   FIELDS,
@@ -15,7 +16,7 @@ import type { ApiResponse, User } from "@/lib/types";
 
 function sessionFallbackUser(
   airtableId: string,
-  session: Awaited<ReturnType<typeof auth>>,
+  session: Session | null,
 ): User {
   const nickname =
     session?.user?.nickname?.trim() ||
