@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR, { type KeyedMutator } from "swr";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ui/Toast";
 import { needsOnboarding } from "@/lib/format";
@@ -12,12 +12,13 @@ import type { ApiResponse, User } from "@/lib/types";
 function OnboardingForm({
   initial,
   fallbackNickname,
+  mutateMe,
 }: {
   initial: User;
   fallbackNickname?: string | null;
+  mutateMe: KeyedMutator<User>;
 }) {
   const router = useRouter();
-  const { mutate } = useSWRConfig();
   const { showToast } = useToast();
   const [name, setName] = useState(initial.name ?? "");
   const [nickname, setNickname] = useState(
@@ -26,6 +27,7 @@ function OnboardingForm({
   const [company, setCompany] = useState(initial.company ?? "");
   const [team, setTeam] = useState(initial.team ?? "");
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const canSubmit =
     nickname.trim().length > 0 &&
@@ -35,6 +37,7 @@ function OnboardingForm({
   async function handleSubmit() {
     if (!canSubmit || saving) return;
     setSaving(true);
+    setFormError(null);
     try {
       const res = await fetch(ME_API_KEY, {
         method: "PATCH",
@@ -48,20 +51,26 @@ function OnboardingForm({
       });
       const json = (await res.json()) as ApiResponse<User>;
       if (!res.ok || json.error || !json.data) {
-        throw new Error(json.error ?? "저장에 실패했어요.");
+        throw new Error(json.error ?? `저장 실패 (${res.status})`);
       }
 
-      // Update shared SWR cache before navigate so OnboardingGuard
-      // does not bounce back to /onboarding with stale empty company/team.
-      await mutate(ME_API_KEY, json.data, { revalidate: false });
+      if (needsOnboarding(json.data)) {
+        throw new Error(
+          "저장 응답에 회사/부서 정보가 없습니다. Airtable Company·Team 필드를 확인해 주세요.",
+        );
+      }
+
+      // Update the same SWR cache the OnboardingGuard reads — do not
+      // revalidate yet (would refetch empty mock/stale Airtable and bounce).
+      await mutateMe(json.data, { revalidate: false });
       showToast("프로필이 저장되었어요.");
       router.replace("/");
-      router.refresh();
     } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : "저장에 실패했어요.",
-        "error",
-      );
+      const message =
+        err instanceof Error ? err.message : "저장에 실패했어요.";
+      console.error("[onboarding] submit failed", err);
+      setFormError(message);
+      showToast(message, "error");
     } finally {
       setSaving(false);
     }
@@ -123,13 +132,19 @@ function OnboardingForm({
         </label>
       </div>
 
+      {formError && (
+        <p className="mt-4 text-[13px] text-[#E74C3C]" role="alert">
+          {formError}
+        </p>
+      )}
+
       <button
         type="button"
         disabled={!canSubmit || saving}
         onClick={handleSubmit}
         className="mt-8 flex h-12 w-full items-center justify-center rounded-full bg-primary text-[15px] font-semibold text-white disabled:opacity-40"
       >
-        시작하기
+        {saving ? "저장 중…" : "시작하기"}
       </button>
     </div>
   );
@@ -138,7 +153,7 @@ function OnboardingForm({
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { data: me, isLoading } = useSWR(
+  const { data: me, isLoading, mutate } = useSWR(
     status === "authenticated" ? ME_API_KEY : null,
     fetchMe,
   );
@@ -179,6 +194,7 @@ export default function OnboardingPage() {
       key={me.id}
       initial={me}
       fallbackNickname={session?.user?.nickname ?? session?.user?.name}
+      mutateMe={mutate}
     />
   );
 }

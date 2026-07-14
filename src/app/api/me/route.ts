@@ -12,12 +12,16 @@ import {
 import { getDisplayName } from "@/lib/format";
 import { mapUser } from "@/lib/mappers";
 import { MOCK_USER } from "@/lib/mock-data";
+import { getMockProfile, saveMockProfile } from "@/lib/mock-profile-store";
 import type { ApiResponse, User } from "@/lib/types";
 
 function sessionFallbackUser(
   airtableId: string,
   session: Session | null,
 ): User {
+  const cached = getMockProfile(airtableId);
+  if (cached) return cached;
+
   const nickname =
     session?.user?.nickname?.trim() ||
     session?.user?.name?.trim() ||
@@ -55,8 +59,9 @@ export async function GET() {
             data: mapUser(record),
             error: null,
           } satisfies ApiResponse<User>);
-        } catch {
-          // fall through
+        } catch (err) {
+          console.error("[api/me GET] Airtable getRecord failed", err);
+          // fall through to session fallback / mock store
         }
       }
 
@@ -85,7 +90,8 @@ export async function GET() {
       data: mapUser(records[0]),
       error: null,
     } satisfies ApiResponse<User>);
-  } catch {
+  } catch (err) {
+    console.error("[api/me GET]", err);
     return NextResponse.json({
       data: MOCK_USER,
       error: null,
@@ -138,7 +144,10 @@ export async function PATCH(request: Request) {
       );
     }
 
-    if (!isAirtableConfigured() || airtableId.startsWith("mock-")) {
+    const useMock =
+      !isAirtableConfigured() || airtableId.startsWith("mock-");
+
+    if (useMock) {
       const base = sessionFallbackUser(airtableId, session);
       const updated: User = {
         ...base,
@@ -147,6 +156,7 @@ export async function PATCH(request: Request) {
         displayName: getDisplayName({ name, nickname }),
         ...(hasOrgFields ? { company, team } : {}),
       };
+      saveMockProfile(updated);
       return NextResponse.json({
         data: updated,
         error: null,
@@ -164,13 +174,25 @@ export async function PATCH(request: Request) {
     }
 
     const updated = await updateRecord(TABLES.users, airtableId, fields);
+    const mapped = mapUser(updated);
+
+    // Ensure response always carries submitted org fields even if Airtable
+    // omits empty-adjacent fields from the PATCH response payload.
+    const data: User = {
+      ...mapped,
+      name,
+      nickname,
+      displayName: getDisplayName({ name, nickname }),
+      ...(hasOrgFields ? { company, team } : {}),
+    };
 
     return NextResponse.json({
-      data: mapUser(updated),
+      data,
       error: null,
     } satisfies ApiResponse<User>);
   } catch (err) {
     const message = err instanceof Error ? err.message : "프로필 저장 실패";
+    console.error("[api/me PATCH]", message, err);
     return NextResponse.json(
       { data: null, error: message } satisfies ApiResponse<User>,
       { status: 500 },

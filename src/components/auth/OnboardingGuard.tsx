@@ -21,7 +21,12 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { data: me } = useSWR(
     status === "authenticated" ? ME_API_KEY : null,
     fetchMe,
-    { revalidateOnFocus: true },
+    {
+      // Prefer cache written by onboarding submit; avoid focus refetch
+      // immediately wiping company/team and bouncing back to /onboarding.
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+    },
   );
 
   useEffect(() => {
