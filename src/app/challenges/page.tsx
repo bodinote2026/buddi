@@ -36,8 +36,10 @@ function TrendIcon({ trend }: { trend: Team["trend"] }) {
   return <Minus size={16} className="text-text-secondary" aria-label="유지" />;
 }
 
+const TEAM_CHALLENGES_KEY = "/api/challenges/team";
+
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   const json = (await res.json()) as ApiResponse<T>;
   if (!res.ok || json.error || !json.data) {
     throw new Error(json.error ?? "불러오기 실패");
@@ -45,11 +47,15 @@ async function fetchJson<T>(url: string): Promise<T> {
   return json.data;
 }
 
+async function fetchTeamChallenges(): Promise<TeamChallenge[]> {
+  return fetchJson<TeamChallenge[]>(TEAM_CHALLENGES_KEY);
+}
+
 export default function ChallengesPage() {
   const { showToast } = useToast();
   const { data: teams = MOCK_TEAMS } = useSWR("/api/teams/leaderboard", fetchJson<Team[]>);
   const { data: challenges = MOCK_TEAM_CHALLENGES, mutate: refreshChallenges } =
-    useSWR("/api/challenges/team", fetchJson<TeamChallenge[]>);
+    useSWR(TEAM_CHALLENGES_KEY, fetchTeamChallenges);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [checkinTarget, setCheckinTarget] = useState<TeamChallenge | null>(null);
@@ -71,8 +77,8 @@ export default function ChallengesPage() {
       completionRate: 0,
     };
     void refreshChallenges(
-      async (current) => [optimistic, ...(current ?? [])],
-      false,
+      (current) => [optimistic, ...(current ?? [])],
+      { revalidate: false },
     );
     setCreateOpen(false);
     setTitle("");
@@ -87,10 +93,23 @@ export default function ChallengesPage() {
           department: optimistic.teamName,
         }),
       });
-      const json = await res.json();
-      if (!res.ok || json.error) throw new Error(json.error ?? "생성 실패");
-      await refreshChallenges();
+      const json = (await res.json()) as ApiResponse<TeamChallenge>;
+      if (!res.ok || json.error || !json.data) {
+        throw new Error(json.error ?? "생성 실패");
+      }
+
+      const created = json.data;
+      await refreshChallenges(
+        (current) => {
+          const rest = (current ?? []).filter(
+            (c) => c.id !== optimistic.id && c.id !== created.id,
+          );
+          return [created, ...rest];
+        },
+        { revalidate: false },
+      );
       showToast("팀 챌린지가 생성되었어요! 팀원들에게 초대를 보냈어요.");
+      void refreshChallenges();
     } catch {
       await refreshChallenges();
       showToast("챌린지 생성에 실패했어요.", "error");

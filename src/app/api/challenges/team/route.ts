@@ -10,6 +10,8 @@ import { mapTeamChallenge } from "@/lib/mappers";
 import { listTeamChallengesWithCounts } from "@/lib/team-checkin";
 import type { ApiResponse, TeamChallenge } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const data = await listTeamChallengesWithCounts();

@@ -351,7 +351,7 @@ export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
   }
 
   const [challengeRecords, participantRecords] = await Promise.all([
-    listRecords(TABLES.teamChallenges),
+    listRecords(TABLES.teamChallenges, undefined, { skipCache: true }),
     listParticipantRecords(),
   ]);
   const counts = participantCountsByChallenge(participantRecords);
