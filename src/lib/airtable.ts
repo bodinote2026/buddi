@@ -182,11 +182,13 @@ export async function airtableFetch<T = AirtableListResponse>(
 export async function listRecords(
   table: string,
   params?: Record<string, string>,
+  options?: { skipCache?: boolean },
 ): Promise<AirtableRecord[]> {
   const search = new URLSearchParams(params);
   const query = search.toString();
   const data = await airtableFetch<AirtableListResponse>(
     `${encodeURIComponent(table)}${query ? `?${query}` : ""}`,
+    { skipCache: options?.skipCache },
   );
   return data.records;
 }

@@ -79,6 +79,7 @@ export interface TeamChallengeDetail {
   challenge: TeamChallenge;
   participants: TeamChallengeParticipant[];
   myRecord: TeamChallengeParticipant | null;
+  currentUserId?: string | null;
 }
 
 export interface TeamCheckinResult {

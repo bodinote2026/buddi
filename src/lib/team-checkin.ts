@@ -31,6 +31,7 @@ import {
 } from "@/lib/mock-data";
 import type {
   TeamChallenge,
+  TeamChallengeDetail,
   TeamChallengeParticipant,
   TeamCheckinResult,
 } from "@/lib/types";
@@ -71,20 +72,39 @@ function computeStreak(
   return 1;
 }
 
-function escapeFormulaValue(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+function linkFieldIncludes(value: unknown, recordId: string): boolean {
+  return Array.isArray(value) && value.some((id) => id === recordId);
+}
+
+async function listParticipantRecords(options?: {
+  challengeId?: string;
+  userId?: string;
+}): Promise<import("@/lib/airtable").AirtableRecord[]> {
+  const P = FIELDS.teamChallengeParticipants;
+  const records = await listRecords(TABLES.teamChallengeParticipants, undefined, {
+    skipCache: true,
+  });
+
+  return records.filter((record) => {
+    const fields = record.fields;
+    if (
+      options?.challengeId &&
+      !linkFieldIncludes(fields[P.teamChallenge], options.challengeId)
+    ) {
+      return false;
+    }
+    if (options?.userId && !linkFieldIncludes(fields[P.user], options.userId)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 async function findParticipantRecord(
   userId: string,
   challengeId: string,
 ): Promise<{ record: import("@/lib/airtable").AirtableRecord | null }> {
-  const P = FIELDS.teamChallengeParticipants;
-  const formula = `AND({${P.user}}="${escapeFormulaValue(userId)}",{${P.teamChallenge}}="${escapeFormulaValue(challengeId)}")`;
-  const records = await listRecords(TABLES.teamChallengeParticipants, {
-    filterByFormula: formula,
-    maxRecords: "1",
-  });
+  const records = await listParticipantRecords({ userId, challengeId });
   return { record: records[0] ?? null };
 }
 
@@ -280,11 +300,7 @@ export async function performTeamCheckin(input: {
 export async function getTeamChallengeDetail(
   challengeId: string,
   userId?: string | null,
-): Promise<{
-  challenge: TeamChallenge;
-  participants: TeamChallengeParticipant[];
-  myRecord: TeamChallengeParticipant | null;
-}> {
+): Promise<TeamChallengeDetail> {
   if (!isAirtableConfigured()) {
     const challenge = MOCK_TEAM_CHALLENGES.find((c) => c.id === challengeId);
     if (!challenge) throw new TeamCheckinError("챌린지를 찾을 수 없습니다.", 404);
@@ -300,17 +316,14 @@ export async function getTeamChallengeDetail(
       },
       participants,
       myRecord: my,
+      currentUserId: uid,
     };
   }
 
   const challengeRecord = await getRecord(TABLES.teamChallenges, challengeId);
   const challenge = mapTeamChallenge(challengeRecord);
 
-  const P = FIELDS.teamChallengeParticipants;
-  const formula = `{${P.teamChallenge}}="${escapeFormulaValue(challengeId)}"`;
-  const records = await listRecords(TABLES.teamChallengeParticipants, {
-    filterByFormula: formula,
-  });
+  const records = await listParticipantRecords({ challengeId });
 
   const participants = records
     .map(mapTeamChallengeParticipant)
@@ -328,6 +341,7 @@ export async function getTeamChallengeDetail(
     },
     participants,
     myRecord,
+    currentUserId: userId ?? null,
   };
 }
 

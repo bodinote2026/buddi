@@ -16,7 +16,6 @@ import { TeamCheckinModal } from "@/components/challenges/TeamCheckinModal";
 import { useToast } from "@/components/ui/Toast";
 import { formatPoints } from "@/lib/format";
 import { ME_API_KEY } from "@/lib/me";
-import { MOCK_USER } from "@/lib/mock-data";
 import type {
   ApiResponse,
   TeamChallengeDetail,
@@ -77,8 +76,8 @@ export default function TeamChallengeDetailPage() {
     );
   }
 
-  const { challenge, participants, myRecord } = data;
-  const myUserId = myRecord?.userId ?? MOCK_USER.id;
+  const { challenge, participants, myRecord, currentUserId } = data;
+  const myUserId = currentUserId ?? myRecord?.userId ?? "";
   const checkedInToday = challenge.checkedInToday ?? false;
 
   return (
