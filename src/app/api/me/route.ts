@@ -6,6 +6,7 @@ import {
   getRecord,
   isAirtableConfigured,
   listRecords,
+  resolveSessionAirtableUserId,
   TABLES,
   updateRecord,
 } from "@/lib/airtable";
@@ -46,17 +47,39 @@ function sessionFallbackUser(
   };
 }
 
+async function resolveMeUserId(session: Session | null): Promise<string | undefined> {
+  const airtableId = session?.user?.airtableId;
+  if (!airtableId) return undefined;
+
+  if (!isAirtableConfigured() || airtableId.startsWith("mock-")) {
+    return airtableId;
+  }
+
+  const resolved = await resolveSessionAirtableUserId({
+    airtableId,
+    provider: session?.user?.provider,
+    providerId: session?.user?.providerId,
+  });
+  return resolved ?? airtableId;
+}
+
 export async function GET() {
   try {
     const session = await auth();
-    const airtableId = session?.user?.airtableId;
+    const airtableId = await resolveMeUserId(session);
 
     if (airtableId) {
       if (isAirtableConfigured() && !airtableId.startsWith("mock-")) {
         try {
           const record = await getRecord(TABLES.users, airtableId);
+          const user = mapUser(record);
+          console.info("[api/me GET] loaded user", {
+            id: user.id,
+            hasCompany: Boolean(user.company?.trim()),
+            hasTeam: Boolean(user.team?.trim()),
+          });
           return NextResponse.json({
-            data: mapUser(record),
+            data: user,
             error: null,
           } satisfies ApiResponse<User>);
         } catch (err) {
@@ -102,7 +125,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const session = await auth();
-    const airtableId = session?.user?.airtableId;
+    const airtableId = await resolveMeUserId(session);
 
     if (!airtableId) {
       return NextResponse.json(

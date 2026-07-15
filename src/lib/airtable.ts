@@ -262,6 +262,14 @@ export function buildFindUserByProviderFormula(
   return `AND(LOWER({${U.provider}})="${providerNorm}",${idClause})`;
 }
 
+/** Airtable may return 404 or 403 when a record id is deleted or no longer accessible. */
+function isStaleUserRecordError(err: unknown): boolean {
+  return (
+    err instanceof AirtableApiError &&
+    (err.status === 404 || err.status === 403)
+  );
+}
+
 /** Resolve a valid Users record id from session claims, re-linking via provider when stale. */
 export async function resolveSessionAirtableUserId(input: {
   airtableId?: string | null;
@@ -279,11 +287,12 @@ export async function resolveSessionAirtableUserId(input: {
       await getRecord(TABLES.users, airtableId);
       return airtableId;
     } catch (err) {
-      if (!(err instanceof AirtableApiError && err.status === 404)) {
+      if (!isStaleUserRecordError(err)) {
         throw err;
       }
       console.warn("[airtable] stale session user id, re-resolving", {
         airtableId,
+        status: err instanceof AirtableApiError ? err.status : undefined,
       });
     }
   }
