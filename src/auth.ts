@@ -23,17 +23,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!account?.provider || !account.providerAccountId) return false;
 
       try {
-        await upsertSocialUser({
+        console.info("[auth] signIn upsert attempt", {
+          provider: account.provider,
+          providerId: account.providerAccountId,
+        });
+        const result = await upsertSocialUser({
           provider: account.provider,
           providerId: account.providerAccountId,
           nickname: user.name?.trim() || "buddi_user",
           email: user.email,
           avatarUrl: user.image,
         });
+        console.info("[auth] Airtable upsert ok", {
+          id: result.id,
+          created: result.created,
+          provider: account.provider,
+          providerId: account.providerAccountId,
+        });
         return true;
       } catch (err) {
-        console.error("[auth] Airtable upsert failed", err);
-        return true;
+        console.error("[auth] signIn Airtable upsert failed — blocking login", err);
+        return false;
       }
     },
     async jwt({ token, account, user }) {
@@ -47,6 +57,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           "buddi_user";
 
         try {
+          console.info("[auth] jwt upsert attempt", {
+            provider: account.provider,
+            providerId: account.providerAccountId,
+          });
           const result = await upsertSocialUser({
             provider: account.provider,
             providerId: account.providerAccountId,
@@ -56,9 +70,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
           token.airtableId = result.id;
           token.nickname = nickname;
+          console.info("[auth] jwt upsert ok", {
+            id: result.id,
+            created: result.created,
+            providerId: account.providerAccountId,
+          });
         } catch (err) {
-          console.error("[auth] jwt upsert failed", err);
-          token.airtableId = `mock-${account.provider}-${account.providerAccountId}`;
+          console.error(
+            "[auth] jwt upsert failed — session without airtableId",
+            err,
+          );
           token.nickname = nickname;
         }
       }

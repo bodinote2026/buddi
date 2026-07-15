@@ -96,6 +96,39 @@ export function isAirtableConfigured() {
   return Boolean(process.env.AIRTABLE_PAT && process.env.AIRTABLE_BASE_ID);
 }
 
+export class AirtableApiError extends Error {
+  readonly status: number;
+  readonly body: string;
+  readonly method: string;
+  readonly path: string;
+
+  constructor(status: number, body: string, method: string, path: string) {
+    super(`Airtable ${status}: ${body}`);
+    this.name = "AirtableApiError";
+    this.status = status;
+    this.body = body;
+    this.method = method;
+    this.path = path;
+  }
+}
+
+function logAirtableFailure(
+  status: number,
+  body: string,
+  method: string,
+  path: string,
+) {
+  let error: unknown = body;
+  if (body) {
+    try {
+      error = JSON.parse(body);
+    } catch {
+      /* keep raw body */
+    }
+  }
+  console.error("[airtable] request failed", { status, method, path, error });
+}
+
 async function sleep(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -131,7 +164,8 @@ export async function airtableFetch<T = AirtableListResponse>(
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`Airtable ${res.status}${body ? `: ${body}` : ""}`);
+    logAirtableFailure(res.status, body, method, path);
+    throw new AirtableApiError(res.status, body, method, path);
   }
 
   return res.json() as Promise<T>;
@@ -198,16 +232,53 @@ function escapeFormulaValue(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
+/**
+ * Build lookup formula for OAuth users.
+ * - Provider: case-insensitive (Single select option may be "Kakao" while OAuth sends "kakao")
+ * - Provider ID: string OR numeric compare (field may be Number while OAuth id is a numeric string)
+ */
+export function buildFindUserByProviderFormula(
+  provider: string,
+  providerId: string,
+): string {
+  const U = FIELDS.users;
+  const providerNorm = escapeFormulaValue(provider.trim().toLowerCase());
+  const idTrimmed = providerId.trim();
+  const idEscaped = escapeFormulaValue(idTrimmed);
+  const idQuoted = `{${U.providerId}}="${idEscaped}"`;
+  const idClause = /^\d+$/.test(idTrimmed)
+    ? `OR(${idQuoted},{${U.providerId}}=${idTrimmed})`
+    : idQuoted;
+
+  return `AND(LOWER({${U.provider}})="${providerNorm}",${idClause})`;
+}
+
 export async function findUserByProvider(
   provider: string,
   providerId: string,
 ): Promise<AirtableRecord | null> {
-  const U = FIELDS.users;
-  const records = await listRecords(TABLES.users, {
-    filterByFormula: `AND({${U.provider}}="${escapeFormulaValue(provider)}",{${U.providerId}}="${escapeFormulaValue(providerId)}")`,
-    maxRecords: "1",
+  const formula = buildFindUserByProviderFormula(provider, providerId);
+  const params = { filterByFormula: formula, maxRecords: "1" };
+  const query = new URLSearchParams(params).toString();
+
+  console.info("[airtable] findUserByProvider request", {
+    provider: provider.trim(),
+    providerId: providerId.trim(),
+    formula,
+    path: `${TABLES.users}?${query}`,
   });
-  return records[0] ?? null;
+
+  const records = await listRecords(TABLES.users, params);
+
+  const first = records[0];
+  console.info("[airtable] findUserByProvider result", {
+    count: records.length,
+    recordIds: records.map((r) => r.id),
+    storedProvider: first?.fields[FIELDS.users.provider],
+    storedProviderId: first?.fields[FIELDS.users.providerId],
+  });
+
+  return first ?? null;
 }
 
 export interface CreateUserInput {
@@ -228,8 +299,8 @@ export async function createUser(
     [U.nickname]: input.nickname || "buddi_user",
     [U.company]: "",
     [U.team]: "",
-    [U.provider]: input.provider,
-    [U.providerId]: input.providerId,
+    [U.provider]: input.provider.trim(),
+    [U.providerId]: input.providerId.trim(),
     [U.totalStreakDays]: 0,
     [U.temperature]: 36.5,
     [U.mileage]: 0,
@@ -259,6 +330,11 @@ export async function upsertSocialUser(
   }
 
   const created = await createUser(input);
+  console.info("[airtable] user created", {
+    id: created.id,
+    provider: input.provider,
+    providerId: input.providerId,
+  });
   return { id: created.id, created: true };
 }
 
