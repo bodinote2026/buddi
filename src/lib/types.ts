@@ -62,7 +62,29 @@ export interface TeamChallenge {
   teamName: string;
   participants: number;
   completionRate: number;
+  teamId?: string;
   checkedInToday?: boolean;
+}
+
+export interface TeamChallengeParticipant {
+  id: string;
+  userId: string;
+  nickname: string;
+  pointsEarned: number;
+  streakDays: number;
+  lastCheckinAt?: string;
+}
+
+export interface TeamChallengeDetail {
+  challenge: TeamChallenge;
+  participants: TeamChallengeParticipant[];
+  myRecord: TeamChallengeParticipant | null;
+}
+
+export interface TeamCheckinResult {
+  challenge: TeamChallenge;
+  participant: TeamChallengeParticipant;
+  mileage: number;
 }
 
 export interface StoreItem {

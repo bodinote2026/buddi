@@ -7,6 +7,7 @@ import type {
   StoreItem,
   Team,
   TeamChallenge,
+  TeamChallengeParticipant,
   User,
 } from "./types";
 
@@ -37,6 +38,11 @@ function asAttachmentUrl(value: unknown): string {
 function asTrend(value: unknown): Team["trend"] {
   if (value === "상승" || value === "유지" || value === "하락") return value;
   return "유지";
+}
+
+function asLinkId(value: unknown): string | undefined {
+  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  return undefined;
 }
 
 function asBadge(value: unknown): StoreItem["badge"] {
@@ -135,6 +141,23 @@ export function mapTeamChallenge(record: AirtableRecord): TeamChallenge {
     teamName: asString(f[TC.teamName]),
     participants: asNumber(f[TC.participants]),
     completionRate: asNumber(f[TC.completionRate]),
+    teamId: asLinkId(f[TC.team]),
+  };
+}
+
+export function mapTeamChallengeParticipant(
+  record: AirtableRecord,
+): TeamChallengeParticipant {
+  const f = record.fields;
+  const P = FIELDS.teamChallengeParticipants;
+  const userId = asLinkId(f[P.user]) ?? "";
+  return {
+    id: record.id,
+    userId,
+    nickname: asString(f[P.nickname], "버디"),
+    pointsEarned: asNumber(f[P.pointsEarned]),
+    streakDays: asNumber(f[P.streakDays]),
+    lastCheckinAt: asString(f[P.lastCheckinAt]) || undefined,
   };
 }
 

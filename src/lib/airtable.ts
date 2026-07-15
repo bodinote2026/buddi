@@ -70,6 +70,14 @@ export const FIELDS = {
     participants: "Participants",
     completionRate: "Completion Rate",
   },
+  teamChallengeParticipants: {
+    user: "User",
+    nickname: "Nickname (from User)",
+    teamChallenge: "Team Challenge",
+    pointsEarned: "Points Earned",
+    streakDays: "Streak Days",
+    lastCheckinAt: "Last Checkin At",
+  },
   storeItems: {
     name: "Name",
     brand: "Brand",
@@ -225,6 +233,7 @@ export const TABLES = {
   buddies: "Buddies",
   teams: "Teams",
   teamChallenges: "TeamChallenges",
+  teamChallengeParticipants: "TeamChallengeParticipants",
   storeItems: "Store Items",
 } as const;
 

@@ -12,7 +12,8 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+/** MVP: accept image upload; auto-approve when file present (AI stub). */
+export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
@@ -25,6 +26,18 @@ export async function POST(_request: Request, context: RouteContext) {
           error: "로그인이 필요합니다.",
         } satisfies ApiResponse<TeamCheckinResult>,
         { status: 401 },
+      );
+    }
+
+    const form = await request.formData();
+    const image = form.get("image");
+    if (!image || !(image instanceof Blob) || image.size === 0) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: "인증 사진이 필요합니다.",
+        } satisfies ApiResponse<TeamCheckinResult>,
+        { status: 400 },
       );
     }
 
@@ -50,8 +63,8 @@ export async function POST(_request: Request, context: RouteContext) {
         { status: err.status },
       );
     }
-    const message = err instanceof Error ? err.message : "인증 실패";
-    console.error("[api/team/checkin]", message, err);
+    const message = err instanceof Error ? err.message : "사진 인증 실패";
+    console.error("[api/team/verify-photo]", message, err);
     return NextResponse.json(
       { data: null, error: message } satisfies ApiResponse<TeamCheckinResult>,
       { status: 500 },
