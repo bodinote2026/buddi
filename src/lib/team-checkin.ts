@@ -1,9 +1,12 @@
+import type { Session } from "next-auth";
 import {
+  AirtableApiError,
   createRecord,
   FIELDS,
   getRecord,
   isAirtableConfigured,
   listRecords,
+  resolveSessionAirtableUserId,
   TABLES,
   updateRecord,
 } from "@/lib/airtable";
@@ -328,10 +331,42 @@ export async function getTeamChallengeDetail(
   };
 }
 
-export function resolveCheckinUserId(
-  airtableId: string | undefined | null,
-): string | null {
-  if (airtableId) return airtableId;
-  if (!isAirtableConfigured()) return MOCK_USER.id;
+export function mapCheckinAirtableError(err: unknown): TeamCheckinError | null {
+  if (!(err instanceof AirtableApiError)) return null;
+
+  if (err.body.includes("ROW_DOES_NOT_EXIST")) {
+    return new TeamCheckinError(
+      "사용자 또는 챌린지 정보를 찾을 수 없어요. 로그아웃 후 다시 로그인해 주세요.",
+      400,
+    );
+  }
+
+  if (err.status === 404) {
+    return new TeamCheckinError("챌린지를 찾을 수 없습니다.", 404);
+  }
+
+  if (err.status === 422) {
+    return new TeamCheckinError(
+      "인증 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+      422,
+    );
+  }
+
   return null;
+}
+
+export async function resolveCheckinUserId(
+  session: Session | null,
+): Promise<string | null> {
+  if (!session?.user) return null;
+
+  if (!isAirtableConfigured()) {
+    return session.user.airtableId ?? MOCK_USER.id;
+  }
+
+  return resolveSessionAirtableUserId({
+    airtableId: session.user.airtableId,
+    provider: session.user.provider,
+    providerId: session.user.providerId,
+  });
 }

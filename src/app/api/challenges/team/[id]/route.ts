@@ -16,7 +16,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   try {
     const session = await auth();
-    const userId = resolveCheckinUserId(session?.user?.airtableId);
+    const userId = await resolveCheckinUserId(session);
 
     const detail = await getTeamChallengeDetail(id, userId);
 

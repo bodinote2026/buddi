@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Kakao from "next-auth/providers/kakao";
 import type { Provider } from "next-auth/providers";
-import { upsertSocialUser } from "@/lib/airtable";
+import { isAirtableConfigured, resolveSessionAirtableUserId, upsertSocialUser } from "@/lib/airtable";
 
 /**
  * Provider list — add Google (etc.) here later without restructuring auth.
@@ -87,6 +87,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.name) token.name = user.name;
       if (user?.email) token.email = user.email;
       if (user?.image) token.picture = user.image;
+
+      if (
+        isAirtableConfigured() &&
+        token.provider &&
+        token.providerId &&
+        typeof token.provider === "string" &&
+        typeof token.providerId === "string"
+      ) {
+        try {
+          const resolved = await resolveSessionAirtableUserId({
+            airtableId:
+              typeof token.airtableId === "string" ? token.airtableId : undefined,
+            provider: token.provider,
+            providerId: token.providerId,
+          });
+          if (resolved) token.airtableId = resolved;
+        } catch (err) {
+          console.error("[auth] jwt user id resolve failed", err);
+        }
+      }
 
       return token;
     },

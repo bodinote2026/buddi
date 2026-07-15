@@ -262,6 +262,43 @@ export function buildFindUserByProviderFormula(
   return `AND(LOWER({${U.provider}})="${providerNorm}",${idClause})`;
 }
 
+/** Resolve a valid Users record id from session claims, re-linking via provider when stale. */
+export async function resolveSessionAirtableUserId(input: {
+  airtableId?: string | null;
+  provider?: string | null;
+  providerId?: string | null;
+}): Promise<string | null> {
+  if (!isAirtableConfigured()) {
+    return input.airtableId ?? null;
+  }
+
+  const { airtableId, provider, providerId } = input;
+
+  if (airtableId && !airtableId.startsWith("mock-")) {
+    try {
+      await getRecord(TABLES.users, airtableId);
+      return airtableId;
+    } catch (err) {
+      if (!(err instanceof AirtableApiError && err.status === 404)) {
+        throw err;
+      }
+      console.warn("[airtable] stale session user id, re-resolving", {
+        airtableId,
+      });
+    }
+  }
+
+  if (provider && providerId) {
+    const record = await findUserByProvider(provider, providerId);
+    if (record) {
+      console.info("[airtable] resolved user from provider", { id: record.id });
+      return record.id;
+    }
+  }
+
+  return null;
+}
+
 export async function findUserByProvider(
   provider: string,
   providerId: string,

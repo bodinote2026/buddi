@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getDisplayName } from "@/lib/format";
 import {
+  mapCheckinAirtableError,
   performTeamCheckin,
   resolveCheckinUserId,
   TeamCheckinError,
@@ -18,7 +19,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const session = await auth();
-    const userId = resolveCheckinUserId(session?.user?.airtableId);
+    const userId = await resolveCheckinUserId(session);
     if (!userId) {
       return NextResponse.json(
         {
@@ -61,6 +62,13 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json(
         { data: null, error: err.message } satisfies ApiResponse<TeamCheckinResult>,
         { status: err.status },
+      );
+    }
+    const mapped = mapCheckinAirtableError(err);
+    if (mapped) {
+      return NextResponse.json(
+        { data: null, error: mapped.message } satisfies ApiResponse<TeamCheckinResult>,
+        { status: mapped.status },
       );
     }
     const message = err instanceof Error ? err.message : "사진 인증 실패";
