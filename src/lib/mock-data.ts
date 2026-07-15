@@ -90,7 +90,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     company: "바디노트",
     teamName: "마케팅 1팀",
     teamId: "team-1",
-    participants: 12,
+    participants: 0,
     completionRate: 84,
   },
   {
@@ -99,7 +99,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     company: "바디노트",
     teamName: "개발본부",
     teamId: "team-2",
-    participants: 24,
+    participants: 0,
     completionRate: 67,
   },
   {
@@ -108,7 +108,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     company: "버핏그라운드",
     teamName: "디자인팀",
     teamId: "team-3",
-    participants: 8,
+    participants: 0,
     completionRate: 58,
   },
 ];

@@ -139,7 +139,7 @@ export function mapTeamChallenge(record: AirtableRecord): TeamChallenge {
     title: asString(f[TC.title]),
     company: asString(f[TC.company]),
     teamName: asString(f[TC.teamName]),
-    participants: asNumber(f[TC.participants]),
+    participants: 0,
     completionRate: asNumber(f[TC.completionRate]),
     teamId: asLinkId(f[TC.team]),
   };

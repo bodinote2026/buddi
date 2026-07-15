@@ -7,29 +7,22 @@ import {
   TABLES,
 } from "@/lib/airtable";
 import { mapTeamChallenge } from "@/lib/mappers";
-import { MOCK_TEAM_CHALLENGES } from "@/lib/mock-data";
+import { listTeamChallengesWithCounts } from "@/lib/team-checkin";
 import type { ApiResponse, TeamChallenge } from "@/lib/types";
 
 export async function GET() {
   try {
-    if (!isAirtableConfigured()) {
-      return NextResponse.json({
-        data: MOCK_TEAM_CHALLENGES,
-        error: null,
-      } satisfies ApiResponse<TeamChallenge[]>);
-    }
-
-    const records = await listRecords(TABLES.teamChallenges);
-
+    const data = await listTeamChallengesWithCounts();
     return NextResponse.json({
-      data: records.map(mapTeamChallenge),
+      data,
       error: null,
     } satisfies ApiResponse<TeamChallenge[]>);
-  } catch {
-    return NextResponse.json({
-      data: MOCK_TEAM_CHALLENGES,
-      error: null,
-    } satisfies ApiResponse<TeamChallenge[]>);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "조회 실패";
+    return NextResponse.json(
+      { data: null, error: message } satisfies ApiResponse<TeamChallenge[]>,
+      { status: 500 },
+    );
   }
 }
 
@@ -58,7 +51,7 @@ export async function POST(request: Request) {
         title,
         company: "바디노트",
         teamName: department,
-        participants: 1,
+        participants: 0,
         completionRate: 0,
       };
       return NextResponse.json({
@@ -76,7 +69,6 @@ export async function POST(request: Request) {
     const fields: Record<string, unknown> = {
       [TC.title]: title,
       [TC.company]: "바디노트",
-      [TC.participants]: 1,
       [TC.completionRate]: 0,
     };
     if (teams[0]) {
@@ -86,6 +78,7 @@ export async function POST(request: Request) {
     const record = await createRecord(TABLES.teamChallenges, fields);
     const mapped = mapTeamChallenge(record);
     if (!mapped.teamName) mapped.teamName = department;
+    mapped.participants = 0;
 
     return NextResponse.json({
       data: mapped,

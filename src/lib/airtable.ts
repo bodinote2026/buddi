@@ -67,7 +67,6 @@ export const FIELDS = {
     company: "Company",
     team: "Team",
     teamName: "Team Name",
-    participants: "Participants",
     completionRate: "Completion Rate",
   },
   teamChallengeParticipants: {

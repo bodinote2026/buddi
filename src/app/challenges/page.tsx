@@ -67,7 +67,7 @@ export default function ChallengesPage() {
       title: title.trim(),
       company: "바디노트",
       teamName: department.trim(),
-      participants: 1,
+      participants: 0,
       completionRate: 0,
     };
     void refreshChallenges(

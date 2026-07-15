@@ -166,7 +166,9 @@ function mockCheckin(
   const challenge: TeamChallenge = {
     ...mock,
     completionRate: Math.min(100, mock.completionRate + completionBump()),
-    participants: existing ? mock.participants : mock.participants + 1,
+    participants: countUniqueParticipants(
+      listMockParticipantsForChallenge(challengeId),
+    ),
     checkedInToday: true,
   };
 
@@ -179,7 +181,6 @@ async function airtableCheckin(
   challengeId: string,
 ): Promise<TeamCheckinResult> {
   const P = FIELDS.teamChallengeParticipants;
-  const TC = FIELDS.teamChallenges;
   const U = FIELDS.users;
   const T = FIELDS.teams;
 
@@ -229,13 +230,6 @@ async function airtableCheckin(
         [P.lastCheckinAt]: now,
       });
       participant = mapTeamChallengeParticipant(created);
-
-      const currentParticipants = Number(
-        challengeRecord.fields[TC.participants] ?? 0,
-      );
-      await updateRecord(TABLES.teamChallenges, challengeId, {
-        [TC.participants]: currentParticipants + 1,
-      });
     }
   } catch (err) {
     console.error("[team-checkin] participant upsert failed", { step, err });
@@ -274,7 +268,15 @@ async function airtableCheckin(
   let challenge: TeamChallenge;
   try {
     challenge = await bumpTeamChallengeCompletion(challengeId);
-    challenge = { ...challenge, checkedInToday: true };
+    const participantRecords = await listParticipantRecords({ challengeId });
+    const participantCount = countUniqueParticipants(
+      participantRecords.map(mapTeamChallengeParticipant),
+    );
+    challenge = {
+      ...challenge,
+      participants: participantCount,
+      checkedInToday: true,
+    };
   } catch (err) {
     console.error("[team-checkin] completion rate update failed", { step, err });
     throw err;
@@ -304,6 +306,63 @@ function countUniqueParticipants(
     entries.map((p) => p.userId).filter((id) => id.length > 0),
   );
   return ids.size;
+}
+
+function firstLinkId(value: unknown): string | undefined {
+  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  return undefined;
+}
+
+function participantCountsByChallenge(
+  records: import("@/lib/airtable").AirtableRecord[],
+): Map<string, number> {
+  const P = FIELDS.teamChallengeParticipants;
+  const usersByChallenge = new Map<string, Set<string>>();
+
+  for (const record of records) {
+    const fields = record.fields;
+    const challengeId = firstLinkId(fields[P.teamChallenge]);
+    const userId = firstLinkId(fields[P.user]);
+    if (!challengeId || !userId) continue;
+
+    let users = usersByChallenge.get(challengeId);
+    if (!users) {
+      users = new Set();
+      usersByChallenge.set(challengeId, users);
+    }
+    users.add(userId);
+  }
+
+  const counts = new Map<string, number>();
+  for (const [challengeId, users] of usersByChallenge) {
+    counts.set(challengeId, users.size);
+  }
+  return counts;
+}
+
+export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
+  if (!isAirtableConfigured()) {
+    return MOCK_TEAM_CHALLENGES.map((challenge) => ({
+      ...challenge,
+      participants: countUniqueParticipants(
+        listMockParticipantsForChallenge(challenge.id),
+      ),
+    }));
+  }
+
+  const [challengeRecords, participantRecords] = await Promise.all([
+    listRecords(TABLES.teamChallenges),
+    listParticipantRecords(),
+  ]);
+  const counts = participantCountsByChallenge(participantRecords);
+
+  return challengeRecords.map((record) => {
+    const challenge = mapTeamChallenge(record);
+    return {
+      ...challenge,
+      participants: counts.get(challenge.id) ?? 0,
+    };
+  });
 }
 
 export async function getTeamChallengeDetail(
