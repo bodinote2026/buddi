@@ -297,6 +297,15 @@ export async function performTeamCheckin(input: {
   return airtableCheckin(userId, nickname, challengeId);
 }
 
+function countUniqueParticipants(
+  entries: TeamChallengeParticipant[],
+): number {
+  const ids = new Set(
+    entries.map((p) => p.userId).filter((id) => id.length > 0),
+  );
+  return ids.size;
+}
+
 export async function getTeamChallengeDetail(
   challengeId: string,
   userId?: string | null,
@@ -312,6 +321,7 @@ export async function getTeamChallengeDetail(
     return {
       challenge: {
         ...challenge,
+        participants: countUniqueParticipants(participants),
         checkedInToday: isCheckedInToday(my?.lastCheckinAt),
       },
       participants,
@@ -337,6 +347,7 @@ export async function getTeamChallengeDetail(
   return {
     challenge: {
       ...challenge,
+      participants: countUniqueParticipants(participants),
       checkedInToday: isCheckedInToday(myRecord?.lastCheckinAt),
     },
     participants,
