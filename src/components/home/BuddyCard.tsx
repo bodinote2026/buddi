@@ -21,12 +21,12 @@ export function BuddyCard({
         compact ? "w-full" : "w-[73vw] shrink-0 snap-start"
       }`}
     >
-      <div className="relative aspect-[5/4] max-h-[220px] w-full bg-primary-light">
+      <div className="relative aspect-[4/3] bg-primary-light">
         <Image
           src={buddy.avatarUrl}
           alt={`${buddy.name} 프로필 사진`}
           fill
-          className="object-cover object-top"
+          className="object-cover"
           unoptimized
           sizes={compact ? "80px" : "73vw"}
           priority={priority}
