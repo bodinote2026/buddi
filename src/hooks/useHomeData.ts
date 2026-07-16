@@ -9,7 +9,7 @@ import {
 import type { ApiResponse, Buddy, Challenge, User } from "@/lib/types";
 
 async function fetcher<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   const json = (await res.json()) as ApiResponse<T>;
   if (!res.ok || json.data === null) {
     throw new Error(json.error ?? "요청에 실패했습니다.");

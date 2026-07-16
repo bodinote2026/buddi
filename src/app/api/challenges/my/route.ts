@@ -58,7 +58,7 @@ export async function GET() {
     const userChallengeRecords = await listRecords(
       TABLES.userChallenges,
       {
-        filterByFormula: `{${UC.status}}="진행중"`,
+        filterByFormula: `OR({${UC.status}}="진행중",{${UC.status}}="진행 중")`,
       },
       { skipCache: true },
     );

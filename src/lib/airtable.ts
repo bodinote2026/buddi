@@ -42,9 +42,9 @@ export const FIELDS = {
     status: "Status",
     lastCheckinAt: "Last Checkin At",
     name: "Name",
-    challengeTitle: "Title (from Challenge)",
-    challengeEmoji: "Emoji (from Challenge)",
-    challengeDescription: "Description (from Challenge)",
+    challengeTitle: "Challenge Title",
+    challengeEmoji: "Challenge Emoji",
+    challengeDescription: "Challenge Description",
   },
   buddies: {
     name: "Name",

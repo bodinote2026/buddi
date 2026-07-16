@@ -95,6 +95,17 @@ function pickField(
   return fallback;
 }
 
+function pickNonPlaceholderField(
+  fields: Record<string, unknown>,
+  keys: string[],
+): string {
+  for (const key of keys) {
+    const value = asString(fields[key]);
+    if (value && !isPlaceholderTitle(value)) return value;
+  }
+  return "";
+}
+
 function pickFieldByKeyHint(
   fields: Record<string, unknown>,
   hints: string[],
@@ -196,22 +207,28 @@ export function mapUserChallenge(
   const progress = asNumber(f[UC.progress]);
   const streakDays = asNumber(f[UC.streakDays]);
 
-  let emoji = pickField(
-    f,
-    [UC.challengeEmoji, "Challenge Emoji", "Emoji (from Challenges)"],
-  );
-  let title = pickField(
-    f,
-    [UC.name, UC.challengeTitle, "Challenge Title", "Title (from Challenges)"],
-  );
-  let description = pickField(f, [
+  let emoji = pickNonPlaceholderField(f, [
+    UC.challengeEmoji,
+    "Challenge Emoji",
+    "Emoji (from Challenges)",
+    "Emoji (from Challenge)",
+  ]);
+  let title = pickNonPlaceholderField(f, [
+    UC.challengeTitle,
+    "Challenge Title",
+    "Title (from Challenges)",
+    "Title (from Challenge)",
+    UC.name,
+  ]);
+  let description = pickNonPlaceholderField(f, [
     UC.challengeDescription,
     "Challenge Description",
     "Description (from Challenges)",
+    "Description (from Challenge)",
   ]);
 
   if (!emoji) emoji = pickFieldByKeyHint(f, ["emoji"]);
-  if (!title) title = pickFieldByKeyHint(f, ["title", "name"]);
+  if (!title) title = pickFieldByKeyHint(f, ["title"]);
   if (!description) description = pickFieldByKeyHint(f, ["description"]);
 
   if (challengeById) {
