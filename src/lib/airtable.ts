@@ -67,6 +67,7 @@ export const FIELDS = {
     company: "Company",
     team: "Team",
     teamName: "Team Name",
+    teamNameFromTeam: "Name (from Team)",
     completionRate: "Completion Rate",
   },
   teamChallengeParticipants: {
@@ -367,6 +368,26 @@ export async function createUser(
   if (input.avatarUrl) fields[U.avatarUrl] = input.avatarUrl;
 
   return createRecord(TABLES.users, fields);
+}
+
+/** Find a Teams record by exact Name match, or create one with defaults. */
+export async function findOrCreateTeamByName(
+  name: string,
+): Promise<AirtableRecord> {
+  const trimmed = name.trim();
+  const escaped = escapeFormulaValue(trimmed);
+  const records = await listRecords(TABLES.teams, {
+    filterByFormula: `{${FIELDS.teams.name}}="${escaped}"`,
+    maxRecords: "1",
+  });
+  if (records[0]) return records[0];
+
+  const T = FIELDS.teams;
+  return createRecord(TABLES.teams, {
+    [T.name]: trimmed,
+    [T.points]: 0,
+    [T.trend]: "유지",
+  });
 }
 
 /** Find existing social user or create with defaults. Mock id when Airtable is off. */

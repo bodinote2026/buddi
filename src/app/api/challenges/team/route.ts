@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import {
   createRecord,
   FIELDS,
+  findOrCreateTeamByName,
   isAirtableConfigured,
-  listRecords,
   TABLES,
 } from "@/lib/airtable";
 import { mapTeamChallenge } from "@/lib/mappers";
@@ -63,21 +63,25 @@ export async function POST(request: Request) {
     }
 
     const TC = FIELDS.teamChallenges;
-    const teams = await listRecords(TABLES.teams, {
-      filterByFormula: `{${FIELDS.teams.name}}="${department.replace(/"/g, '\\"')}"`,
-      maxRecords: "1",
-    });
+    const team = await findOrCreateTeamByName(department);
 
     const fields: Record<string, unknown> = {
       [TC.title]: title,
       [TC.company]: "바디노트",
       [TC.completionRate]: 0,
+      [TC.team]: [team.id],
     };
-    if (teams[0]) {
-      fields[TC.team] = [teams[0].id];
+
+    let record;
+    try {
+      record = await createRecord(TABLES.teamChallenges, {
+        ...fields,
+        [TC.teamName]: department,
+      });
+    } catch {
+      record = await createRecord(TABLES.teamChallenges, fields);
     }
 
-    const record = await createRecord(TABLES.teamChallenges, fields);
     const mapped = mapTeamChallenge(record);
     if (!mapped.teamName) mapped.teamName = department;
     mapped.participants = 0;

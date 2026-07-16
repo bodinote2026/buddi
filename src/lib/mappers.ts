@@ -134,11 +134,13 @@ export function mapTeam(record: AirtableRecord): Team {
 export function mapTeamChallenge(record: AirtableRecord): TeamChallenge {
   const f = record.fields;
   const TC = FIELDS.teamChallenges;
+  const teamName =
+    asString(f[TC.teamName]) || asString(f[TC.teamNameFromTeam]);
   return {
     id: record.id,
     title: asString(f[TC.title]),
     company: asString(f[TC.company]),
-    teamName: asString(f[TC.teamName]),
+    teamName,
     participants: 0,
     completionRate: asNumber(f[TC.completionRate]),
     teamId: asLinkId(f[TC.team]),
