@@ -75,14 +75,61 @@ export function mapUser(record: AirtableRecord): User {
   };
 }
 
-export function mapUserChallenge(record: AirtableRecord): Challenge {
+function pickField(
+  fields: Record<string, unknown>,
+  keys: string[],
+  fallback = "",
+): string {
+  for (const key of keys) {
+    const value = asString(fields[key]);
+    if (value) return value;
+  }
+  return fallback;
+}
+
+export function mapUserChallenge(
+  record: AirtableRecord,
+  challengeById?: Map<string, AirtableRecord>,
+): Challenge {
   const f = record.fields;
   const UC = FIELDS.userChallenges;
+  const challengeLinkId = asLinkId(f[UC.challenge]);
+
+  let emoji = pickField(
+    f,
+    [UC.challengeEmoji, "Challenge Emoji", "Emoji (from Challenges)"],
+    "💪",
+  );
+  let title = pickField(
+    f,
+    [UC.challengeTitle, "Challenge Title", "Title (from Challenges)"],
+    "챌린지",
+  );
+  let description = pickField(f, [
+    UC.challengeDescription,
+    "Challenge Description",
+    "Description (from Challenges)",
+  ]);
+
+  if (challengeById && challengeLinkId) {
+    const linked = challengeById.get(challengeLinkId);
+    if (linked) {
+      const C = FIELDS.challenges;
+      const cf = linked.fields;
+      const linkedTitle = asString(cf[C.title]);
+      const linkedEmoji = asString(cf[C.emoji]);
+      const linkedDescription = asString(cf[C.description]);
+      if (linkedTitle) title = linkedTitle;
+      if (linkedEmoji) emoji = linkedEmoji;
+      if (linkedDescription) description = linkedDescription;
+    }
+  }
+
   return {
     id: record.id,
-    emoji: asString(f[UC.challengeEmoji], "💪"),
-    title: asString(f[UC.challengeTitle], "챌린지"),
-    description: asString(f[UC.challengeDescription]),
+    emoji,
+    title,
+    description,
     progress: asNumber(f[UC.progress]),
     streakDays: asNumber(f[UC.streakDays]),
   };
