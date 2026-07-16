@@ -44,7 +44,7 @@ export default function BuddiesPage() {
                     src={buddy.avatarUrl}
                     alt={`${buddy.name} 프로필 사진`}
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
                     unoptimized
                     sizes="80px"
                   />
