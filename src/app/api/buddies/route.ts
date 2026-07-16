@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
       params.filterByFormula = `{${FIELDS.buddies.isRecommended}}=TRUE()`;
     }
 
-    const records = await listRecords(TABLES.buddies, params);
+    const records = await listRecords(TABLES.buddies, params, {
+      skipCache: true,
+    });
 
     return NextResponse.json({
       data: records.map(mapBuddy),
