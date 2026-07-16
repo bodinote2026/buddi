@@ -13,13 +13,13 @@ export function ChallengeCardSkeleton() {
 
 export function BuddyCardSkeleton() {
   return (
-    <div className="w-[72vw] max-w-[260px] shrink-0 overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
-      <div className="skeleton aspect-[4/3] w-full" />
-      <div className="space-y-2 p-3.5">
-        <div className="skeleton h-5 w-20 rounded-full" />
-        <div className="skeleton h-4 w-28 rounded" />
+    <div className="w-[62vw] max-w-[210px] shrink-0 overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
+      <div className="skeleton aspect-square w-full" />
+      <div className="space-y-2 p-3">
+        <div className="skeleton h-4 w-20 rounded-full" />
+        <div className="skeleton h-3.5 w-28 rounded" />
         <div className="skeleton h-3 w-16 rounded" />
-        <div className="skeleton h-11 w-full rounded-full" />
+        <div className="skeleton h-9 w-full rounded-full" />
       </div>
     </div>
   );
@@ -40,7 +40,7 @@ export function HomeSkeleton() {
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-40 rounded" />
-        <div className="flex gap-3 overflow-hidden">
+        <div className="-mx-5 flex gap-3 overflow-hidden px-5">
           <BuddyCardSkeleton />
           <BuddyCardSkeleton />
         </div>
