@@ -113,6 +113,17 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
   },
 ];
 
+export const BUDDY_AVATAR_URLS = {
+  김서연:
+    "https://res.cloudinary.com/djnwbzh6a/image/upload/v1784168674/smiling-asian-woman-with-long-black-hair-wearing-grey-shirt-gives-thumbsup-gesture-white-background_t1svvc.jpg",
+  이준호:
+    "https://res.cloudinary.com/djnwbzh6a/image/upload/v1784168673/young-man-wearing-yellow-hoodie-is-smiling-looking-up-sky_nutcdh.jpg",
+  박지민:
+    "https://res.cloudinary.com/djnwbzh6a/image/upload/v1784168673/424068655_c65a220f-8659-423d-bf81-3747e6a3716c_gqrn3q.jpg",
+  정민우:
+    "https://res.cloudinary.com/djnwbzh6a/image/upload/v1784168672/man-with-black-hair-tan-shirt-with-white-logo-front_ueuown.jpg",
+} as const;
+
 export const MOCK_BUDDIES: Buddy[] = [
   {
     id: "buddy-1",
@@ -124,7 +135,7 @@ export const MOCK_BUDDIES: Buddy[] = [
     district: "강남구",
     intro: "함께 아침 러닝해요",
     interests: ["운동", "맛집", "여행"],
-    avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=seoyeon",
+    avatarUrl: BUDDY_AVATAR_URLS["김서연"],
   },
   {
     id: "buddy-2",
@@ -136,7 +147,7 @@ export const MOCK_BUDDIES: Buddy[] = [
     district: "서초구",
     intro: "맛집 탐방 같이 다녀요",
     interests: ["맛집", "여행"],
-    avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=junho",
+    avatarUrl: BUDDY_AVATAR_URLS["이준호"],
   },
   {
     id: "buddy-3",
@@ -148,7 +159,7 @@ export const MOCK_BUDDIES: Buddy[] = [
     district: "송파구",
     intro: "주말 등산 메이트 구해요",
     interests: ["운동", "여행"],
-    avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=jimin",
+    avatarUrl: BUDDY_AVATAR_URLS["박지민"],
   },
   {
     id: "buddy-4",
@@ -160,7 +171,7 @@ export const MOCK_BUDDIES: Buddy[] = [
     district: "마포구",
     intro: "저녁 클라이밍 같이 해요",
     interests: ["운동", "맛집"],
-    avatarUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=minwoo",
+    avatarUrl: BUDDY_AVATAR_URLS["정민우"],
   },
 ];
 
