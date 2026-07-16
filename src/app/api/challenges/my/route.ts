@@ -93,16 +93,6 @@ export async function GET() {
       }),
     );
 
-    if (userChallengeRecords[0]) {
-      console.info("[challenges/my] sample field keys", {
-        keys: Object.keys(userChallengeRecords[0].fields),
-        challengeMapSize: challengeById.size,
-        linkIds: userChallengeRecords.map((record) =>
-          collectChallengeLinkIds(record.fields),
-        ),
-      });
-    }
-
     return NextResponse.json({
       data: userChallengeRecords.map((record) =>
         mapUserChallenge(record, challengeById),

@@ -127,6 +127,36 @@ function findLinkedChallengeId(
   return undefined;
 }
 
+function titlesMatch(a: string, b: string): boolean {
+  const normalize = (value: string) =>
+    value.replace(/\s*\([^)]*\)\s*/g, "").trim();
+  const left = normalize(a);
+  const right = normalize(b);
+  return (
+    left === right ||
+    left.startsWith(right) ||
+    right.startsWith(left) ||
+    left.includes(right) ||
+    right.includes(left)
+  );
+}
+
+function resolveChallengeDetails(
+  title: string,
+  challengeById: Map<string, AirtableRecord>,
+): { emoji: string; description: string } {
+  const C = FIELDS.challenges;
+  for (const record of challengeById.values()) {
+    const challengeTitle = asString(record.fields[C.title]);
+    if (!challengeTitle || !titlesMatch(title, challengeTitle)) continue;
+    return {
+      emoji: asString(record.fields[C.emoji]),
+      description: asString(record.fields[C.description]),
+    };
+  }
+  return { emoji: "", description: "" };
+}
+
 export function mapUserChallenge(
   record: AirtableRecord,
   challengeById?: Map<string, AirtableRecord>,
@@ -140,7 +170,7 @@ export function mapUserChallenge(
   );
   let title = pickField(
     f,
-    [UC.challengeTitle, "Challenge Title", "Title (from Challenges)"],
+    [UC.name, UC.challengeTitle, "Challenge Title", "Title (from Challenges)"],
   );
   let description = pickField(f, [
     UC.challengeDescription,
@@ -149,7 +179,7 @@ export function mapUserChallenge(
   ]);
 
   if (!emoji) emoji = pickFieldByKeyHint(f, ["emoji"]);
-  if (!title) title = pickFieldByKeyHint(f, ["title"]);
+  if (!title) title = pickFieldByKeyHint(f, ["title", "name"]);
   if (!description) description = pickFieldByKeyHint(f, ["description"]);
 
   if (challengeById) {
@@ -166,6 +196,10 @@ export function mapUserChallenge(
         if (linkedEmoji) emoji = linkedEmoji;
         if (linkedDescription) description = linkedDescription;
       }
+    } else if (title) {
+      const matched = resolveChallengeDetails(title, challengeById);
+      if (matched.emoji) emoji = matched.emoji;
+      if (matched.description) description = matched.description;
     }
   }
 
@@ -235,6 +269,7 @@ export function mapTeamChallenge(record: AirtableRecord): TeamChallenge {
     participants: 0,
     completionRate: asNumber(f[TC.completionRate]),
     teamId: asLinkId(f[TC.team]),
+    createdTime: record.createdTime,
   };
 }
 

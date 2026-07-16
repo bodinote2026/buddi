@@ -41,6 +41,7 @@ export const FIELDS = {
     streakDays: "Streak Days",
     status: "Status",
     lastCheckinAt: "Last Checkin At",
+    name: "Name",
     challengeTitle: "Title (from Challenge)",
     challengeEmoji: "Emoji (from Challenge)",
     challengeDescription: "Description (from Challenge)",
