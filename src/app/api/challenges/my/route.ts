@@ -19,15 +19,26 @@ function collectChallengeLinkIds(
   const ids = new Set<string>();
   const linkFieldNames = [UC.challenge, "Challenge", "Challenges"];
 
+  const addId = (value: unknown) => {
+    if (typeof value === "string" && value.startsWith("rec")) {
+      ids.add(value);
+      return;
+    }
+    if (Array.isArray(value)) {
+      if (typeof value[0] === "string") ids.add(value[0]);
+      else if (value[0] && typeof value[0] === "object") {
+        const id = (value[0] as { id?: string }).id;
+        if (typeof id === "string") ids.add(id);
+      }
+    }
+  };
+
   for (const key of linkFieldNames) {
-    const id = fields[key];
-    if (Array.isArray(id) && typeof id[0] === "string") ids.add(id[0]);
+    addId(fields[key]);
   }
 
   for (const value of Object.values(fields)) {
-    if (Array.isArray(value) && typeof value[0] === "string") {
-      ids.add(value[0]);
-    }
+    addId(value);
   }
 
   return [...ids];
@@ -81,6 +92,16 @@ export async function GET() {
         }
       }),
     );
+
+    if (userChallengeRecords[0]) {
+      console.info("[challenges/my] sample field keys", {
+        keys: Object.keys(userChallengeRecords[0].fields),
+        challengeMapSize: challengeById.size,
+        linkIds: userChallengeRecords.map((record) =>
+          collectChallengeLinkIds(record.fields),
+        ),
+      });
+    }
 
     return NextResponse.json({
       data: userChallengeRecords.map((record) =>

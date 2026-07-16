@@ -41,7 +41,14 @@ function asTrend(value: unknown): Team["trend"] {
 }
 
 function asLinkId(value: unknown): string | undefined {
-  if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  if (typeof value === "string" && value.startsWith("rec")) return value;
+  if (Array.isArray(value)) {
+    if (typeof value[0] === "string") return value[0];
+    if (value[0] && typeof value[0] === "object") {
+      const id = (value[0] as { id?: string }).id;
+      if (typeof id === "string") return id;
+    }
+  }
   return undefined;
 }
 
