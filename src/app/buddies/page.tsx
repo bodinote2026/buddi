@@ -1,26 +1,11 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import useSWR from "swr";
 import { MapPin, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { INTEREST_STYLES, MOCK_BUDDIES } from "@/lib/mock-data";
 import { formatTemperature } from "@/lib/format";
-import type { ApiResponse, Buddy } from "@/lib/types";
-
-async function fetchBuddies(): Promise<Buddy[]> {
-  const res = await fetch("/api/buddies", { cache: "no-store" });
-  const json = (await res.json()) as ApiResponse<Buddy[]>;
-  if (!res.ok || !json.data) {
-    throw new Error(json.error ?? "불러오기 실패");
-  }
-  return json.data;
-}
 
 export default function BuddiesPage() {
-  const { data: buddies = MOCK_BUDDIES } = useSWR("/api/buddies", fetchBuddies);
-
   return (
     <>
       <Header title="버디" />
@@ -33,7 +18,7 @@ export default function BuddiesPage() {
         </div>
 
         <div className="space-y-3">
-          {buddies.map((buddy) => (
+          {MOCK_BUDDIES.map((buddy) => (
             <article
               key={buddy.id}
               className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]"

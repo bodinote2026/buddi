@@ -9,11 +9,6 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
-      {
         protocol: "http",
         hostname: "k.kakaocdn.net",
         pathname: "/**",

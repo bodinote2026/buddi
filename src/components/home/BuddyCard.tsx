@@ -18,7 +18,7 @@ export function BuddyCard({
   return (
     <article
       className={`relative flex flex-col overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)] ${
-        compact ? "w-full" : "w-[73vw] shrink-0 snap-start"
+        compact ? "w-full" : "w-[72vw] max-w-[260px] shrink-0 snap-start"
       }`}
     >
       <div className="relative aspect-[4/3] bg-primary-light">
@@ -28,7 +28,7 @@ export function BuddyCard({
           fill
           className="object-cover"
           unoptimized
-          sizes={compact ? "80px" : "73vw"}
+          sizes="260px"
           priority={priority}
         />
         <span className="absolute right-2.5 top-2.5 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-text-primary shadow-sm">
