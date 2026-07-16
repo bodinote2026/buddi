@@ -87,23 +87,53 @@ function pickField(
   return fallback;
 }
 
+function pickFieldByKeyHint(
+  fields: Record<string, unknown>,
+  hints: string[],
+): string {
+  for (const [key, value] of Object.entries(fields)) {
+    const lower = key.toLowerCase();
+    if (!hints.some((hint) => lower.includes(hint))) continue;
+    const parsed = asString(value);
+    if (parsed) return parsed;
+  }
+  return "";
+}
+
+function findLinkedChallengeId(
+  fields: Record<string, unknown>,
+  challengeById: Map<string, AirtableRecord>,
+): string | undefined {
+  const UC = FIELDS.userChallenges;
+  const linkFieldNames = [UC.challenge, "Challenge", "Challenges"];
+
+  for (const key of linkFieldNames) {
+    const id = asLinkId(fields[key]);
+    if (id && challengeById.has(id)) return id;
+  }
+
+  for (const value of Object.values(fields)) {
+    const id = asLinkId(value);
+    if (id && challengeById.has(id)) return id;
+  }
+
+  return undefined;
+}
+
 export function mapUserChallenge(
   record: AirtableRecord,
   challengeById?: Map<string, AirtableRecord>,
 ): Challenge {
   const f = record.fields;
   const UC = FIELDS.userChallenges;
-  const challengeLinkId = asLinkId(f[UC.challenge]);
 
   let emoji = pickField(
     f,
     [UC.challengeEmoji, "Challenge Emoji", "Emoji (from Challenges)"],
-    "💪",
   );
   let title = pickField(
     f,
     [UC.challengeTitle, "Challenge Title", "Title (from Challenges)"],
-    "챌린지",
   );
   let description = pickField(f, [
     UC.challengeDescription,
@@ -111,24 +141,31 @@ export function mapUserChallenge(
     "Description (from Challenges)",
   ]);
 
-  if (challengeById && challengeLinkId) {
-    const linked = challengeById.get(challengeLinkId);
-    if (linked) {
-      const C = FIELDS.challenges;
-      const cf = linked.fields;
-      const linkedTitle = asString(cf[C.title]);
-      const linkedEmoji = asString(cf[C.emoji]);
-      const linkedDescription = asString(cf[C.description]);
-      if (linkedTitle) title = linkedTitle;
-      if (linkedEmoji) emoji = linkedEmoji;
-      if (linkedDescription) description = linkedDescription;
+  if (!emoji) emoji = pickFieldByKeyHint(f, ["emoji"]);
+  if (!title) title = pickFieldByKeyHint(f, ["title"]);
+  if (!description) description = pickFieldByKeyHint(f, ["description"]);
+
+  if (challengeById) {
+    const challengeLinkId = findLinkedChallengeId(f, challengeById);
+    if (challengeLinkId) {
+      const linked = challengeById.get(challengeLinkId);
+      if (linked) {
+        const C = FIELDS.challenges;
+        const cf = linked.fields;
+        const linkedTitle = asString(cf[C.title]);
+        const linkedEmoji = asString(cf[C.emoji]);
+        const linkedDescription = asString(cf[C.description]);
+        if (linkedTitle) title = linkedTitle;
+        if (linkedEmoji) emoji = linkedEmoji;
+        if (linkedDescription) description = linkedDescription;
+      }
     }
   }
 
   return {
     id: record.id,
-    emoji,
-    title,
+    emoji: emoji || "💪",
+    title: title || "챌린지",
     description,
     progress: asNumber(f[UC.progress]),
     streakDays: asNumber(f[UC.streakDays]),
