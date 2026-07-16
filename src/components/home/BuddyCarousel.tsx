@@ -21,7 +21,7 @@ export function BuddyCarousel({ buddies }: BuddyCarouselProps) {
           </Link>
         }
       />
-      <div className="scrollbar-hide -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2">
+      <div className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
         {buddies.map((buddy, index) => (
           <BuddyCard
             key={buddy.id}

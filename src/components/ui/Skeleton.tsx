@@ -40,7 +40,7 @@ export function HomeSkeleton() {
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-40 rounded" />
-        <div className="-mx-5 flex gap-3 overflow-hidden px-5">
+        <div className="flex gap-3 overflow-hidden">
           <BuddyCardSkeleton />
           <BuddyCardSkeleton />
         </div>
