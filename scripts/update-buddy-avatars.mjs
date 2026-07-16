@@ -51,7 +51,7 @@ for (const record of records) {
   await airtable(`Buddies/${record.id}`, {
     method: "PATCH",
     body: JSON.stringify({
-      fields: { "Avatar URL": [{ url }] },
+      fields: { "Avatar URL": url },
     }),
   });
   console.log(`updated: ${name} (${record.id})`);

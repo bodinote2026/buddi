@@ -13,9 +13,8 @@ import type { ApiResponse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-function avatarFieldValue(url: string): string | { url: string }[] {
-  // Buddies "Avatar URL" is an attachment field in Airtable.
-  return [{ url }];
+function avatarFieldValue(url: string): string {
+  return url;
 }
 
 export async function GET() {
