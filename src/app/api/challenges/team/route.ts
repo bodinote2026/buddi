@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         teamName: department,
         participants: 0,
         completionRate: 0,
+        createdTime: new Date().toISOString(),
       };
       return NextResponse.json({
         data: created,

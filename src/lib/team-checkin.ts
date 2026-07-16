@@ -38,6 +38,17 @@ import type {
 
 export { TEAM_CHECKIN_POINTS };
 
+function sortTeamChallengesNewestFirst(
+  challenges: TeamChallenge[],
+): TeamChallenge[] {
+  return [...challenges].sort((a, b) => {
+    const aTime = a.createdTime ? Date.parse(a.createdTime) : 0;
+    const bTime = b.createdTime ? Date.parse(b.createdTime) : 0;
+    if (bTime !== aTime) return bTime - aTime;
+    return b.id.localeCompare(a.id);
+  });
+}
+
 export class TeamCheckinError extends Error {
   constructor(
     message: string,
@@ -342,12 +353,14 @@ function participantCountsByChallenge(
 
 export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
   if (!isAirtableConfigured()) {
-    return MOCK_TEAM_CHALLENGES.map((challenge) => ({
-      ...challenge,
-      participants: countUniqueParticipants(
-        listMockParticipantsForChallenge(challenge.id),
-      ),
-    }));
+    return sortTeamChallengesNewestFirst(
+      MOCK_TEAM_CHALLENGES.map((challenge) => ({
+        ...challenge,
+        participants: countUniqueParticipants(
+          listMockParticipantsForChallenge(challenge.id),
+        ),
+      })),
+    );
   }
 
   const [challengeRecords, participantRecords] = await Promise.all([
@@ -356,13 +369,15 @@ export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
   ]);
   const counts = participantCountsByChallenge(participantRecords);
 
-  return challengeRecords.map((record) => {
-    const challenge = mapTeamChallenge(record);
-    return {
-      ...challenge,
-      participants: counts.get(challenge.id) ?? 0,
-    };
-  });
+  return sortTeamChallengesNewestFirst(
+    challengeRecords.map((record) => {
+      const challenge = mapTeamChallenge(record);
+      return {
+        ...challenge,
+        participants: counts.get(challenge.id) ?? 0,
+      };
+    }),
+  );
 }
 
 export async function getTeamChallengeDetail(

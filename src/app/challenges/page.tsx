@@ -75,6 +75,7 @@ export default function ChallengesPage() {
       teamName: department.trim(),
       participants: 0,
       completionRate: 0,
+      createdTime: new Date().toISOString(),
     };
     void refreshChallenges(
       (current) => [optimistic, ...(current ?? [])],

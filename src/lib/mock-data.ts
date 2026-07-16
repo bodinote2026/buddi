@@ -92,6 +92,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     teamId: "team-1",
     participants: 0,
     completionRate: 84,
+    createdTime: "2026-07-10T09:00:00.000Z",
   },
   {
     id: "tc-2",
@@ -101,6 +102,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     teamId: "team-2",
     participants: 0,
     completionRate: 67,
+    createdTime: "2026-07-12T09:00:00.000Z",
   },
   {
     id: "tc-3",
@@ -110,6 +112,7 @@ export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [
     teamId: "team-3",
     participants: 0,
     completionRate: 58,
+    createdTime: "2026-07-14T09:00:00.000Z",
   },
 ];
 

@@ -64,6 +64,7 @@ export interface TeamChallenge {
   completionRate: number;
   teamId?: string;
   checkedInToday?: boolean;
+  createdTime?: string;
 }
 
 export interface TeamChallengeParticipant {
