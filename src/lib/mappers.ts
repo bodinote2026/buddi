@@ -1,5 +1,6 @@
 import { FIELDS, type AirtableRecord } from "./airtable";
 import { getDisplayName } from "./format";
+import { MOCK_CHALLENGES } from "./mock-data";
 import type {
   Buddy,
   Challenge,
@@ -157,12 +158,43 @@ function resolveChallengeDetails(
   return { emoji: "", description: "" };
 }
 
+function isPlaceholderTitle(title: string): boolean {
+  const trimmed = title.trim();
+  return (
+    !trimmed ||
+    trimmed === "챌린지" ||
+    trimmed === "-" ||
+    trimmed === " - "
+  );
+}
+
+function resolveByProgressStreak(
+  progress: number,
+  streakDays: number,
+  challengeById: Map<string, AirtableRecord>,
+): { title: string; emoji: string; description: string } | null {
+  const seed = MOCK_CHALLENGES.find(
+    (challenge) =>
+      challenge.progress === progress && challenge.streakDays === streakDays,
+  );
+  if (!seed) return null;
+
+  const matched = resolveChallengeDetails(seed.title, challengeById);
+  return {
+    title: seed.title,
+    emoji: matched.emoji || seed.emoji,
+    description: matched.description || seed.description,
+  };
+}
+
 export function mapUserChallenge(
   record: AirtableRecord,
   challengeById?: Map<string, AirtableRecord>,
 ): Challenge {
   const f = record.fields;
   const UC = FIELDS.userChallenges;
+  const progress = asNumber(f[UC.progress]);
+  const streakDays = asNumber(f[UC.streakDays]);
 
   let emoji = pickField(
     f,
@@ -196,10 +228,24 @@ export function mapUserChallenge(
         if (linkedEmoji) emoji = linkedEmoji;
         if (linkedDescription) description = linkedDescription;
       }
-    } else if (title) {
+    } else if (title && !isPlaceholderTitle(title)) {
       const matched = resolveChallengeDetails(title, challengeById);
       if (matched.emoji) emoji = matched.emoji;
       if (matched.description) description = matched.description;
+    }
+
+    if (
+      isPlaceholderTitle(title) ||
+      !emoji ||
+      emoji === "💪" ||
+      !description
+    ) {
+      const seeded = resolveByProgressStreak(progress, streakDays, challengeById);
+      if (seeded) {
+        title = seeded.title;
+        emoji = seeded.emoji;
+        description = seeded.description;
+      }
     }
   }
 
@@ -208,8 +254,8 @@ export function mapUserChallenge(
     emoji: emoji || "💪",
     title: title || "챌린지",
     description,
-    progress: asNumber(f[UC.progress]),
-    streakDays: asNumber(f[UC.streakDays]),
+    progress,
+    streakDays,
   };
 }
 
