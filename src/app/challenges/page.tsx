@@ -1,19 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import useSWR, { mutate } from "swr";
 import {
-  Camera,
-  Check,
   Crown,
   Minus,
   Plus,
   TrendingDown,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
 import { TeamCheckinModal } from "@/components/challenges/TeamCheckinModal";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -194,59 +191,12 @@ export default function ChallengesPage() {
           </h2>
           <div className="space-y-3">
             {challenges.map((c) => (
-              <article
+              <TeamChallengeCard
                 key={c.id}
-                className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]"
-              >
-                <Link href={`/challenges/team/${c.id}`} className="block">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-[12px] font-medium text-primary">
-                      {c.company} · {c.teamName}
-                    </p>
-                    <span className="text-[22px] font-bold text-text-primary">
-                      {c.completionRate}%
-                    </span>
-                  </div>
-                  <h3 className="mt-1 text-[16px] font-bold text-text-primary">
-                    {c.title}
-                  </h3>
-                  <p className="mt-1.5 flex items-center gap-1 text-[13px] text-text-secondary">
-                    <Users size={14} aria-hidden />
-                    참여 {c.participants}명
-                  </p>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#ECECF2]">
-                    <div
-                      className="h-full rounded-full bg-[#3EC6A8] transition-all duration-500"
-                      style={{ width: `${c.completionRate}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-[12px] text-text-secondary">
-                    팀 완료율 · 탭하여 상세 보기
-                  </p>
-                </Link>
-                <button
-                  type="button"
-                  disabled={c.checkedInToday}
-                  onClick={() => setCheckinTarget(c)}
-                  className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition-colors ${
-                    c.checkedInToday
-                      ? "bg-[#E8F5EE] text-success"
-                      : "border border-primary bg-white text-primary hover:bg-primary-light"
-                  }`}
-                >
-                  {c.checkedInToday ? (
-                    <>
-                      <Check size={18} aria-hidden />
-                      인증 완료
-                    </>
-                  ) : (
-                    <>
-                      <Camera size={18} aria-hidden />
-                      오늘 인증하기
-                    </>
-                  )}
-                </button>
-              </article>
+                challenge={c}
+                showCheckin
+                onCheckin={setCheckinTarget}
+              />
             ))}
           </div>
         </section>

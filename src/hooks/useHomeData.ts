@@ -3,10 +3,10 @@
 import useSWR from "swr";
 import {
   MOCK_BUDDIES,
-  MOCK_CHALLENGES,
+  MOCK_TEAM_CHALLENGES,
   MOCK_USER,
 } from "@/lib/mock-data";
-import type { ApiResponse, Buddy, Challenge, User } from "@/lib/types";
+import type { ApiResponse, Buddy, TeamChallenge, User } from "@/lib/types";
 
 async function fetcher<T>(url: string): Promise<T> {
   const res = await fetch(url, { cache: "no-store" });
@@ -21,31 +21,39 @@ export function useHomeData() {
   const me = useSWR<User>("/api/me", fetcher, {
     revalidateOnFocus: false,
   });
-  const challenges = useSWR<Challenge[]>("/api/challenges/my", fetcher, {
-    revalidateOnFocus: false,
-  });
+  const teamChallenges = useSWR<TeamChallenge[]>(
+    "/api/challenges/team",
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    },
+  );
   const buddies = useSWR<Buddy[]>("/api/buddies?recommended=true", fetcher, {
     revalidateOnFocus: false,
   });
 
-  const isLoading = me.isLoading || challenges.isLoading || buddies.isLoading;
-  const hasData = Boolean(me.data && challenges.data && buddies.data);
+  const isLoading =
+    me.isLoading || teamChallenges.isLoading || buddies.isLoading;
+  const hasData = Boolean(
+    me.data && teamChallenges.data && buddies.data,
+  );
   const error =
     (!hasData &&
       (me.error?.message ||
-        challenges.error?.message ||
+        teamChallenges.error?.message ||
         buddies.error?.message)) ||
     null;
 
   return {
     user: me.data ?? (!isLoading ? MOCK_USER : undefined),
-    challenges: challenges.data ?? (!isLoading ? MOCK_CHALLENGES : []),
+    teamChallenges:
+      teamChallenges.data ?? (!isLoading ? MOCK_TEAM_CHALLENGES : []),
     buddies: buddies.data ?? (!isLoading ? MOCK_BUDDIES : []),
     isLoading: isLoading && !hasData,
     error,
     retry: () => {
       void me.mutate();
-      void challenges.mutate();
+      void teamChallenges.mutate();
       void buddies.mutate();
     },
   };

@@ -9,7 +9,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useHomeData } from "@/hooks/useHomeData";
 
 export function HomePage() {
-  const { user, challenges, buddies, isLoading, error, retry } = useHomeData();
+  const { user, teamChallenges, buddies, isLoading, error, retry } =
+    useHomeData();
 
   return (
     <>
@@ -26,7 +27,7 @@ export function HomePage() {
       ) : (
         <div className="space-y-6 pb-4">
           <GreetingSection user={user} />
-          <ChallengeList challenges={challenges} />
+          <ChallengeList challenges={teamChallenges} />
           <BuddyCarousel buddies={buddies} />
         </div>
       )}

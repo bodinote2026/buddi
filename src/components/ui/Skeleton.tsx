@@ -1,12 +1,14 @@
-export function ChallengeCardSkeleton() {
+export function TeamChallengeCardSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
-      <div className="skeleton h-14 w-14 shrink-0 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <div className="skeleton h-4 w-3/4 rounded" />
-        <div className="skeleton h-3 w-1/2 rounded" />
-        <div className="skeleton h-5 w-24 rounded-full" />
+    <div className="space-y-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
+      <div className="flex items-start justify-between gap-2">
+        <div className="skeleton h-3.5 w-28 rounded" />
+        <div className="skeleton h-6 w-10 rounded" />
       </div>
+      <div className="skeleton h-5 w-3/4 rounded" />
+      <div className="skeleton h-3.5 w-20 rounded" />
+      <div className="skeleton h-2 w-full rounded-full" />
+      <div className="skeleton h-3 w-32 rounded" />
     </div>
   );
 }
@@ -34,9 +36,8 @@ export function HomeSkeleton() {
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-36 rounded" />
-        <ChallengeCardSkeleton />
-        <ChallengeCardSkeleton />
-        <ChallengeCardSkeleton />
+        <TeamChallengeCardSkeleton />
+        <TeamChallengeCardSkeleton />
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-40 rounded" />
