@@ -9,6 +9,8 @@ import { mapBuddy } from "@/lib/mappers";
 import { MOCK_BUDDIES } from "@/lib/mock-data";
 import type { ApiResponse, Buddy } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const recommended = request.nextUrl.searchParams.get("recommended") === "true";
 
@@ -32,14 +34,28 @@ export async function GET(request: NextRequest) {
       skipCache: true,
     });
 
-    return NextResponse.json({
-      data: records.map(mapBuddy),
-      error: null,
-    } satisfies ApiResponse<Buddy[]>);
+    return NextResponse.json(
+      {
+        data: records.map(mapBuddy),
+        error: null,
+      } satisfies ApiResponse<Buddy[]>,
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
   } catch {
-    return NextResponse.json({
-      data: MOCK_BUDDIES,
-      error: null,
-    } satisfies ApiResponse<Buddy[]>);
+    return NextResponse.json(
+      {
+        data: MOCK_BUDDIES,
+        error: null,
+      } satisfies ApiResponse<Buddy[]>,
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
   }
 }
