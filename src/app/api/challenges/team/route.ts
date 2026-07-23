@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import {
   createRecord,
   FIELDS,
@@ -7,14 +8,19 @@ import {
   TABLES,
 } from "@/lib/airtable";
 import { mapTeamChallenge } from "@/lib/mappers";
-import { listTeamChallengesWithCounts } from "@/lib/team-checkin";
+import {
+  listTeamChallengesWithCounts,
+  resolveCheckinUserId,
+} from "@/lib/team-checkin";
 import type { ApiResponse, TeamChallenge } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const data = await listTeamChallengesWithCounts();
+    const session = await auth();
+    const userId = await resolveCheckinUserId(session);
+    const data = await listTeamChallengesWithCounts(userId);
     return NextResponse.json({
       data,
       error: null,

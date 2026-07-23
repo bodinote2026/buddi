@@ -367,15 +367,52 @@ function participantCountsByChallenge(
   return counts;
 }
 
-export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
+function myParticipationByChallenge(
+  records: import("@/lib/airtable").AirtableRecord[],
+  userId: string,
+): Map<string, TeamChallengeParticipant> {
+  const P = FIELDS.teamChallengeParticipants;
+  const byChallenge = new Map<string, TeamChallengeParticipant>();
+
+  for (const record of records) {
+    const fields = record.fields;
+    const challengeId = firstLinkId(fields[P.teamChallenge]);
+    const recordUserId = firstLinkId(fields[P.user]);
+    if (!challengeId || recordUserId !== userId) continue;
+    byChallenge.set(challengeId, mapTeamChallengeParticipant(record));
+  }
+
+  return byChallenge;
+}
+
+function enrichTeamChallengeForUser(
+  challenge: TeamChallenge,
+  participant: TeamChallengeParticipant | undefined,
+): TeamChallenge {
+  if (!participant) return challenge;
+  return {
+    ...challenge,
+    myStreakDays: participant.streakDays,
+    checkedInToday: isCheckedInToday(participant.lastCheckinAt),
+  };
+}
+
+export async function listTeamChallengesWithCounts(
+  userId?: string | null,
+): Promise<TeamChallenge[]> {
   if (!isAirtableConfigured()) {
     return sortTeamChallengesNewestFirst(
-      MOCK_TEAM_CHALLENGES.map((challenge) => ({
-        ...challenge,
-        participants: countUniqueParticipants(
-          listMockParticipantsForChallenge(challenge.id),
-        ),
-      })),
+      MOCK_TEAM_CHALLENGES.map((challenge) => {
+        const base: TeamChallenge = {
+          ...challenge,
+          participants: countUniqueParticipants(
+            listMockParticipantsForChallenge(challenge.id),
+          ),
+        };
+        if (!userId) return base;
+        const mine = findMockParticipant(userId, challenge.id);
+        return enrichTeamChallengeForUser(base, mine);
+      }),
     );
   }
 
@@ -384,14 +421,21 @@ export async function listTeamChallengesWithCounts(): Promise<TeamChallenge[]> {
     listParticipantRecords(),
   ]);
   const counts = participantCountsByChallenge(participantRecords);
+  const myByChallenge = userId
+    ? myParticipationByChallenge(participantRecords, userId)
+    : new Map<string, TeamChallengeParticipant>();
 
   return sortTeamChallengesNewestFirst(
     challengeRecords.map((record) => {
       const challenge = mapTeamChallenge(record);
-      return {
+      const base: TeamChallenge = {
         ...challenge,
         participants: counts.get(challenge.id) ?? 0,
       };
+      return enrichTeamChallengeForUser(
+        base,
+        myByChallenge.get(challenge.id),
+      );
     }),
   );
 }

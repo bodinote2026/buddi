@@ -1,3 +1,16 @@
+export function HomeChallengeCardSkeleton() {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
+      <div className="skeleton h-14 w-14 shrink-0 rounded-full" />
+      <div className="flex-1 space-y-2">
+        <div className="skeleton h-4 w-3/4 rounded" />
+        <div className="skeleton h-3 w-1/2 rounded" />
+        <div className="skeleton h-5 w-24 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 export function TeamChallengeCardSkeleton() {
   return (
     <div className="space-y-3 rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
@@ -36,8 +49,8 @@ export function HomeSkeleton() {
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-36 rounded" />
-        <TeamChallengeCardSkeleton />
-        <TeamChallengeCardSkeleton />
+        <HomeChallengeCardSkeleton />
+        <HomeChallengeCardSkeleton />
       </div>
       <div className="space-y-3">
         <div className="skeleton h-5 w-40 rounded" />

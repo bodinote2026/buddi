@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TeamChallengeCard } from "@/components/challenges/TeamChallengeCard";
+import { HomeTeamChallengeCard } from "@/components/home/HomeTeamChallengeCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { TeamChallenge } from "@/lib/types";
 
@@ -41,7 +41,7 @@ export function ChallengeList({ challenges }: ChallengeListProps) {
       ) : (
         <div className="space-y-3">
           {displayed.map((challenge) => (
-            <TeamChallengeCard key={challenge.id} challenge={challenge} />
+            <HomeTeamChallengeCard key={challenge.id} challenge={challenge} />
           ))}
         </div>
       )}

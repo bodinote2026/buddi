@@ -64,6 +64,8 @@ export interface TeamChallenge {
   completionRate: number;
   teamId?: string;
   checkedInToday?: boolean;
+  /** Logged-in user's streak; omitted when no participation record exists. */
+  myStreakDays?: number;
   createdTime?: string;
 }
 
