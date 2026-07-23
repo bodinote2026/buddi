@@ -83,18 +83,6 @@ export function mapUser(record: AirtableRecord): User {
   };
 }
 
-function pickField(
-  fields: Record<string, unknown>,
-  keys: string[],
-  fallback = "",
-): string {
-  for (const key of keys) {
-    const value = asString(fields[key]);
-    if (value) return value;
-  }
-  return fallback;
-}
-
 function pickNonPlaceholderField(
   fields: Record<string, unknown>,
   keys: string[],
@@ -355,6 +343,15 @@ export function mapTeamChallengeParticipant(
 export function mapStoreItem(record: AirtableRecord): StoreItem {
   const f = record.fields;
   const S = FIELDS.storeItems;
+  const stockRaw = f[S.stock];
+  const stock =
+    typeof stockRaw === "number" && !Number.isNaN(stockRaw) ? stockRaw : 99;
+  const isActiveRaw = f[S.isActive];
+  const isActive =
+    isActiveRaw === undefined || isActiveRaw === null
+      ? true
+      : Boolean(isActiveRaw);
+
   return {
     id: record.id,
     name: asString(f[S.name]),
@@ -363,5 +360,8 @@ export function mapStoreItem(record: AirtableRecord): StoreItem {
     badge: asBadge(f[S.badge]),
     imageUrl: asAttachmentUrl(f[S.imageUrl]) || undefined,
     isFeatured: Boolean(f[S.isFeatured]),
+    description: asString(f[S.description]) || undefined,
+    stock,
+    isActive,
   };
 }

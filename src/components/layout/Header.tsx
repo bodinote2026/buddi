@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Bell, Settings } from "lucide-react";
 
 interface HeaderProps {
@@ -6,6 +7,7 @@ interface HeaderProps {
   showBell?: boolean;
   showSettings?: boolean;
   onSettingsClick?: () => void;
+  leading?: ReactNode;
 }
 
 export function Header({
@@ -14,6 +16,7 @@ export function Header({
   showBell = false,
   showSettings = false,
   onSettingsClick,
+  leading,
 }: HeaderProps) {
   return (
     <header className="flex h-14 items-center justify-between px-5">
@@ -27,7 +30,12 @@ export function Header({
           </span>
         </div>
       ) : (
-        <h1 className="text-[20px] font-bold text-text-primary">{title}</h1>
+        <div className="flex min-w-0 items-center gap-1">
+          {leading}
+          <h1 className="truncate text-[20px] font-bold text-text-primary">
+            {title}
+          </h1>
+        </div>
       )}
 
       <div className="flex items-center gap-1">

@@ -98,6 +98,9 @@ export interface StoreItem {
   imageUrl?: string;
   isFeatured: boolean;
   emoji?: string;
+  description?: string;
+  stock: number;
+  isActive: boolean;
 }
 
 export interface ApiResponse<T> {

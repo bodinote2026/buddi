@@ -6,6 +6,10 @@ export function formatPoints(value: number): string {
   return `${value.toLocaleString("ko-KR")}P`;
 }
 
+export function formatCurrency(value: number): string {
+  return `${value.toLocaleString("ko-KR")}원`;
+}
+
 export function getDisplayName(user: {
   name?: string | null;
   nickname?: string | null;

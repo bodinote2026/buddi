@@ -86,6 +86,18 @@ export const FIELDS = {
     badge: "Badge",
     imageUrl: "Image URL",
     isFeatured: "Is Featured",
+    stock: "Stock",
+    isActive: "Is Active",
+    description: "Description",
+  },
+  orders: {
+    user: "User",
+    storeItem: "Store Item",
+    itemName: "Item Name (from Store Item)",
+    price: "Price",
+    pointsUsed: "Points Used",
+    cashAmount: "Cash Amount",
+    status: "Status",
   },
 } as const;
 
@@ -238,6 +250,7 @@ export const TABLES = {
   teamChallenges: "TeamChallenges",
   teamChallengeParticipants: "TeamChallengeParticipants",
   storeItems: "Store Items",
+  orders: "Orders",
 } as const;
 
 function escapeFormulaValue(value: string) {
