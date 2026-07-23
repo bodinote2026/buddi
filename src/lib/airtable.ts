@@ -369,6 +369,19 @@ export interface CreateUserInput {
   avatarUrl?: string | null;
 }
 
+export const SIGNUP_BONUS_POINTS = 5000;
+
+async function recordSignupBonus(userId: string): Promise<void> {
+  const { recordPointLedgerEntry } = await import("./point-ledger");
+  await recordPointLedgerEntry({
+    userId,
+    type: "적립",
+    amount: SIGNUP_BONUS_POINTS,
+    reason: "가입 축하",
+    balanceAfter: SIGNUP_BONUS_POINTS,
+  });
+}
+
 export async function createUser(
   input: CreateUserInput,
 ): Promise<AirtableRecord> {
@@ -382,7 +395,7 @@ export async function createUser(
     [U.providerId]: input.providerId.trim(),
     [U.totalStreakDays]: 0,
     [U.temperature]: 36.5,
-    [U.mileage]: 0,
+    [U.mileage]: SIGNUP_BONUS_POINTS,
     [U.completedChallenges]: 0,
     [U.buddyCount]: 0,
   };
@@ -417,10 +430,37 @@ export async function upsertSocialUser(
   input: CreateUserInput,
 ): Promise<{ id: string; created: boolean }> {
   if (!isAirtableConfigured()) {
-    return {
-      id: `mock-${input.provider}-${input.providerId}`,
-      created: true,
-    };
+    const { getDisplayName } = await import("./format");
+    const { getMockProfile, saveMockProfile } = await import(
+      "./mock-profile-store"
+    );
+    const id = `mock-${input.provider}-${input.providerId}`;
+    if (getMockProfile(id)) {
+      return { id, created: false };
+    }
+
+    saveMockProfile({
+      id,
+      name: "",
+      nickname: input.nickname || "buddi_user",
+      displayName: getDisplayName({
+        name: "",
+        nickname: input.nickname || "buddi_user",
+      }),
+      company: "",
+      team: "",
+      totalStreakDays: 0,
+      temperature: 36.5,
+      avatarUrl: input.avatarUrl ?? undefined,
+      mileage: SIGNUP_BONUS_POINTS,
+      completedChallenges: 0,
+      buddyCount: 0,
+      provider: input.provider.trim(),
+      providerId: input.providerId.trim(),
+      email: input.email ?? undefined,
+    });
+    await recordSignupBonus(id);
+    return { id, created: true };
   }
 
   const existing = await findUserByProvider(input.provider, input.providerId);
@@ -429,10 +469,12 @@ export async function upsertSocialUser(
   }
 
   const created = await createUser(input);
+  await recordSignupBonus(created.id);
   console.info("[airtable] user created", {
     id: created.id,
     provider: input.provider,
     providerId: input.providerId,
+    signupBonus: SIGNUP_BONUS_POINTS,
   });
   return { id: created.id, created: true };
 }
