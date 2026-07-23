@@ -114,7 +114,7 @@ export function PurchaseModal({
       <div className="mb-5 rounded-2xl border border-[#E0E0EA] px-4 py-3">
         <p className="text-[13px] text-text-secondary">결제 예정 금액</p>
         <p className="mt-1 text-[15px] font-bold text-text-primary">
-          포인트 {formatPoints(payment.pointsUsed)} + 현금{" "}
+          포인트 {formatPoints(payment.pointsUsed)} + 결제 금액{" "}
           {formatCurrency(payment.cashAmount)}
         </p>
       </div>
