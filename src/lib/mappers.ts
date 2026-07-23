@@ -10,6 +10,8 @@ import type {
   TeamChallenge,
   TeamChallengeParticipant,
   User,
+  PointLedgerEntry,
+  PointLedgerType,
 } from "./types";
 
 function asString(value: unknown, fallback = ""): string {
@@ -363,5 +365,23 @@ export function mapStoreItem(record: AirtableRecord): StoreItem {
     description: asString(f[S.description]) || undefined,
     stock,
     isActive,
+  };
+}
+
+function asLedgerType(value: unknown): PointLedgerType {
+  if (value === "적립" || value === "사용") return value;
+  return "적립";
+}
+
+export function mapPointLedgerEntry(record: AirtableRecord): PointLedgerEntry {
+  const f = record.fields;
+  const PL = FIELDS.pointLedger;
+  return {
+    id: record.id,
+    type: asLedgerType(f[PL.type]),
+    amount: asNumber(f[PL.amount]),
+    reason: asString(f[PL.reason]),
+    balanceAfter: asNumber(f[PL.balanceAfter]),
+    createdAt: record.createdTime ?? new Date().toISOString(),
   };
 }

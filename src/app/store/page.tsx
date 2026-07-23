@@ -142,6 +142,12 @@ export default function StorePage() {
             <p className="mt-2 text-[32px] font-bold tracking-tight">
               {formatPoints(mileage)}
             </p>
+            <Link
+              href="/points/history"
+              className="mt-2 inline-block text-[12px] font-medium text-white/90 underline underline-offset-2"
+            >
+              내역 보기
+            </Link>
             <Gift
               size={56}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25"

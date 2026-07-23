@@ -89,6 +89,22 @@ export interface TeamCheckinResult {
   mileage: number;
 }
 
+export type PointLedgerType = "적립" | "사용";
+
+export interface PointLedgerEntry {
+  id: string;
+  type: PointLedgerType;
+  amount: number;
+  reason: string;
+  balanceAfter: number;
+  createdAt: string;
+}
+
+export interface PointHistoryResponse {
+  balance: number;
+  entries: PointLedgerEntry[];
+}
+
 export interface StoreItem {
   id: string;
   name: string;

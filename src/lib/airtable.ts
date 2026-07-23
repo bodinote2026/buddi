@@ -99,6 +99,13 @@ export const FIELDS = {
     cashAmount: "Cash Amount",
     status: "Status",
   },
+  pointLedger: {
+    user: "User",
+    type: "Type",
+    amount: "Amount",
+    reason: "Reason",
+    balanceAfter: "Balance After",
+  },
 } as const;
 
 function getBaseUrl() {
@@ -251,6 +258,7 @@ export const TABLES = {
   teamChallengeParticipants: "TeamChallengeParticipants",
   storeItems: "Store Items",
   orders: "Orders",
+  pointLedger: "PointLedger",
 } as const;
 
 function escapeFormulaValue(value: string) {

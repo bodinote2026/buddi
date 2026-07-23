@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import {
   ChevronRight,
   LogOut,
+  Sparkles,
   Thermometer,
   Trophy,
   Users,
@@ -20,7 +22,7 @@ import {
   MOCK_USER,
   PROFILE_SETTINGS,
 } from "@/lib/mock-data";
-import { formatTemperature, getDisplayName } from "@/lib/format";
+import { formatTemperature, formatPoints, getDisplayName } from "@/lib/format";
 import type { User } from "@/lib/types";
 
 interface ProfileClientProps {
@@ -160,6 +162,22 @@ function ProfileContent({
             </p>
             <p className="text-[11px] text-text-secondary">나의 버디</p>
           </div>
+        </section>
+
+        <section className="relative overflow-hidden rounded-2xl bg-primary p-4 text-white shadow-[var(--shadow-card)]">
+          <p className="flex items-center gap-1.5 text-[13px] text-white/90">
+            <Sparkles size={14} aria-hidden />
+            내 BUDDI 포인트
+          </p>
+          <p className="mt-1 text-[24px] font-bold tracking-tight">
+            {formatPoints(user.mileage ?? 0)}
+          </p>
+          <Link
+            href="/points/history"
+            className="mt-2 inline-block text-[12px] font-medium text-white/90 underline underline-offset-2"
+          >
+            내역 보기
+          </Link>
         </section>
 
         <section>

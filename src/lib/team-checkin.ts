@@ -24,6 +24,7 @@ import {
   TEAM_CHECKIN_POINTS,
   upsertMockParticipant,
 } from "@/lib/mock-participants-store";
+import { recordPointLedgerEntry } from "@/lib/point-ledger";
 import {
   MOCK_TEAM_CHALLENGES,
   MOCK_TEAMS,
@@ -168,6 +169,14 @@ function mockCheckin(
 
   const mileage = addMockMileage(userId, TEAM_CHECKIN_POINTS);
 
+  void recordPointLedgerEntry({
+    userId,
+    type: "적립",
+    amount: TEAM_CHECKIN_POINTS,
+    reason: `${mock.title} 인증`,
+    balanceAfter: mileage,
+  });
+
   const teamId = mock.teamId ?? mockTeamIdForChallenge(challengeId);
   const teamFallback =
     MOCK_TEAMS.find((t) => t.id === teamId)?.points ?? 0;
@@ -255,6 +264,13 @@ async function airtableCheckin(
     mileage = (user.mileage ?? 0) + TEAM_CHECKIN_POINTS;
     await updateRecord(TABLES.users, userId, {
       [U.mileage]: mileage,
+    });
+    void recordPointLedgerEntry({
+      userId,
+      type: "적립",
+      amount: TEAM_CHECKIN_POINTS,
+      reason: `${challengeBase.title} 인증`,
+      balanceAfter: mileage,
     });
   } catch (err) {
     console.error("[team-checkin] user mileage update failed", { step, err });
