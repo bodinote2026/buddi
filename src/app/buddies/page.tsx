@@ -5,8 +5,9 @@ import Link from "next/link";
 import useSWR from "swr";
 import { MapPin, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { BuddyEmptyState } from "@/components/buddies/BuddyEmptyState";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { INTEREST_STYLES, MOCK_BUDDIES } from "@/lib/mock-data";
+import { INTEREST_STYLES } from "@/lib/mock-data";
 import { formatTemperature } from "@/lib/format";
 import type { ApiResponse, Buddy } from "@/lib/types";
 
@@ -94,7 +95,7 @@ export default function BuddiesPage() {
     revalidateOnReconnect: true,
   });
 
-  const buddies = data ?? (isLoading ? [] : MOCK_BUDDIES);
+  const buddies = data ?? [];
 
   return (
     <>
@@ -117,7 +118,7 @@ export default function BuddiesPage() {
             onRetry={() => void mutate()}
           />
         ) : buddies.length === 0 ? (
-          <EmptyState message="주변에 버디가 없어요" />
+          <BuddyEmptyState variant="page" />
         ) : (
           <div className="space-y-3">
             {buddies.map((buddy) => (

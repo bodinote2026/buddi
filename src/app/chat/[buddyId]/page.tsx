@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { MOCK_BUDDIES } from "@/lib/mock-data";
 
 interface PageProps {
   params: Promise<{ buddyId: string }>;
 }
 
 export default async function ChatPage({ params }: PageProps) {
-  const { buddyId } = await params;
-  const buddy =
-    MOCK_BUDDIES.find((b) => b.id === buddyId) ?? MOCK_BUDDIES[0];
+  await params;
 
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] flex-col">
@@ -22,16 +19,14 @@ export default async function ChatPage({ params }: PageProps) {
           <ArrowLeft size={22} />
         </Link>
         <div>
-          <h1 className="text-[16px] font-bold text-text-primary">
-            {buddy.name}
-          </h1>
-          <p className="text-[12px] text-text-secondary">{buddy.category}</p>
+          <h1 className="text-[16px] font-bold text-text-primary">버디</h1>
+          <p className="text-[12px] text-text-secondary">채팅</p>
         </div>
       </header>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-2 px-5 text-center">
         <p className="text-[15px] font-medium text-text-primary">
-          {buddy.name}님과의 채팅
+          버디와의 채팅
         </p>
         <p className="text-[13px] text-text-secondary">
           채팅 UI는 곧 제공될 예정이에요.

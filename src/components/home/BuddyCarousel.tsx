@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BuddyEmptyState } from "@/components/buddies/BuddyEmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { BuddyCard } from "./BuddyCard";
 import type { Buddy } from "@/lib/types";
@@ -21,15 +22,19 @@ export function BuddyCarousel({ buddies }: BuddyCarouselProps) {
           </Link>
         }
       />
-      <div className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-        {buddies.map((buddy, index) => (
-          <BuddyCard
-            key={buddy.id}
-            buddy={buddy}
-            priority={index === 0}
-          />
-        ))}
-      </div>
+      {buddies.length === 0 ? (
+        <BuddyEmptyState variant="home" />
+      ) : (
+        <div className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+          {buddies.map((buddy, index) => (
+            <BuddyCard
+              key={buddy.id}
+              buddy={buddy}
+              priority={index === 0}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

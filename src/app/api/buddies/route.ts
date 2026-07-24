@@ -6,7 +6,6 @@ import {
   TABLES,
 } from "@/lib/airtable";
 import { mapBuddy } from "@/lib/mappers";
-import { MOCK_BUDDIES } from "@/lib/mock-data";
 import type { ApiResponse, Buddy } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     if (!isAirtableConfigured()) {
       return NextResponse.json({
-        data: MOCK_BUDDIES,
+        data: [],
         error: null,
       } satisfies ApiResponse<Buddy[]>);
     }
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json(
       {
-        data: MOCK_BUDDIES,
+        data: [],
         error: null,
       } satisfies ApiResponse<Buddy[]>,
       {

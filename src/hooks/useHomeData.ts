@@ -2,7 +2,6 @@
 
 import useSWR from "swr";
 import {
-  MOCK_BUDDIES,
   MOCK_TEAM_CHALLENGES,
   MOCK_USER,
 } from "@/lib/mock-data";
@@ -48,7 +47,7 @@ export function useHomeData() {
     user: me.data ?? (!isLoading ? MOCK_USER : undefined),
     teamChallenges:
       teamChallenges.data ?? (!isLoading ? MOCK_TEAM_CHALLENGES : []),
-    buddies: buddies.data ?? (!isLoading ? MOCK_BUDDIES : []),
+    buddies: buddies.data ?? [],
     isLoading: isLoading && !hasData,
     error,
     retry: () => {
