@@ -15,12 +15,13 @@ import { TeamCheckinModal } from "@/components/challenges/TeamCheckinModal";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { ME_API_KEY } from "@/lib/me";
-import { MOCK_TEAM_CHALLENGES, MOCK_TEAMS } from "@/lib/mock-data";
+import { MOCK_TEAM_CHALLENGES, MOCK_TEAMS, MOCK_USER } from "@/lib/mock-data";
 import type {
   ApiResponse,
   Team,
   TeamChallenge,
   TeamCheckinResult,
+  User,
 } from "@/lib/types";
 
 function TrendIcon({ trend }: { trend: Team["trend"] }) {
@@ -50,6 +51,7 @@ async function fetchTeamChallenges(): Promise<TeamChallenge[]> {
 
 export default function ChallengesPage() {
   const { showToast } = useToast();
+  const { data: me = MOCK_USER } = useSWR<User>(ME_API_KEY, fetchJson<User>);
   const { data: teams = MOCK_TEAMS } = useSWR("/api/teams/leaderboard", fetchJson<Team[]>);
   const { data: challenges = MOCK_TEAM_CHALLENGES, mutate: refreshChallenges } =
     useSWR(TEAM_CHALLENGES_KEY, fetchTeamChallenges);
@@ -57,10 +59,11 @@ export default function ChallengesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [checkinTarget, setCheckinTarget] = useState<TeamChallenge | null>(null);
   const [title, setTitle] = useState("");
-  const [department, setDepartment] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const canCreate = title.trim().length > 0 && department.trim().length > 0;
+  const company = me.company?.trim() ?? "";
+  const team = me.team?.trim() ?? "";
+  const canCreate = title.trim().length > 0 && Boolean(company && team);
 
   async function handleCreate() {
     if (!canCreate || creating) return;
@@ -68,10 +71,11 @@ export default function ChallengesPage() {
     const optimistic: TeamChallenge = {
       id: `temp-${Date.now()}`,
       title: title.trim(),
-      company: "바디노트",
-      teamName: department.trim(),
+      company,
+      teamName: team,
       participants: 0,
       completionRate: 0,
+      canParticipate: true,
       createdTime: new Date().toISOString(),
     };
     void refreshChallenges(
@@ -80,7 +84,6 @@ export default function ChallengesPage() {
     );
     setCreateOpen(false);
     setTitle("");
-    setDepartment("");
 
     try {
       const res = await fetch("/api/challenges/team", {
@@ -88,7 +91,6 @@ export default function ChallengesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: optimistic.title,
-          department: optimistic.teamName,
         }),
       });
       const json = (await res.json()) as ApiResponse<TeamChallenge>;
@@ -108,9 +110,12 @@ export default function ChallengesPage() {
       );
       showToast("팀 챌린지가 생성되었어요! 팀원들에게 초대를 보냈어요.");
       void refreshChallenges();
-    } catch {
+    } catch (err) {
       await refreshChallenges();
-      showToast("챌린지 생성에 실패했어요.", "error");
+      showToast(
+        err instanceof Error ? err.message : "챌린지 생성에 실패했어요.",
+        "error",
+      );
     } finally {
       setCreating(false);
     }
@@ -155,9 +160,9 @@ export default function ChallengesPage() {
             팀 리더보드
           </h2>
           <ul className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
-            {teams.map((team, index) => (
+            {teams.map((entry, index) => (
               <li
-                key={team.id}
+                key={entry.id}
                 className="flex items-center gap-3 border-b border-[#F0F0F5] px-4 py-3.5 last:border-b-0"
               >
                 {index === 0 ? (
@@ -170,15 +175,15 @@ export default function ChallengesPage() {
                   </span>
                 )}
                 <span className="flex-1 text-[14px] font-semibold text-text-primary">
-                  {team.name}
+                  {entry.name}
                 </span>
-                <TrendIcon trend={team.trend} />
+                <TrendIcon trend={entry.trend} />
                 <span
                   className={`min-w-[72px] text-right text-[14px] font-bold ${
                     index === 0 ? "text-primary" : "text-text-primary"
                   }`}
                 >
-                  {team.points.toLocaleString("ko-KR")}P
+                  {entry.points.toLocaleString("ko-KR")}P
                 </span>
               </li>
             ))}
@@ -207,10 +212,16 @@ export default function ChallengesPage() {
         title="팀 챌린지 만들기"
         onClose={() => setCreateOpen(false)}
       >
-        <p className="mb-4 text-[14px] text-text-secondary">
-          회사 또는 부서 단위로 새로운 웰니스 챌린지를 시작해보세요.
-        </p>
-        <label className="mb-3 block">
+        {company && team ? (
+          <p className="mb-4 text-[14px] text-text-secondary">
+            {company} · {team}에서 진행할 챌린지를 만들어보세요
+          </p>
+        ) : (
+          <p className="mb-4 text-[14px] text-text-secondary">
+            프로필에 회사와 부서를 입력하면 챌린지를 만들 수 있어요.
+          </p>
+        )}
+        <label className="mb-5 block">
           <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
             챌린지 이름
           </span>
@@ -218,17 +229,6 @@ export default function ChallengesPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="예: 2주 만보 걷기 챌린지"
-            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
-          />
-        </label>
-        <label className="mb-5 block">
-          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
-            참여 부서
-          </span>
-          <input
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="예: 마케팅 1팀"
             className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
           />
         </label>

@@ -26,6 +26,11 @@ import {
 } from "@/lib/mock-participants-store";
 import { recordPointLedgerEntry } from "@/lib/point-ledger";
 import {
+  assertUserCanCheckIn,
+  enrichChallengesForUser,
+  evaluateParticipation,
+} from "@/lib/challenge-eligibility";
+import {
   MOCK_TEAM_CHALLENGES,
   MOCK_TEAMS,
   MOCK_USER,
@@ -319,6 +324,8 @@ export async function performTeamCheckin(input: {
 }): Promise<TeamCheckinResult> {
   const { userId, nickname, challengeId } = input;
 
+  await assertUserCanCheckIn(userId, challengeId);
+
   if (!isAirtableConfigured()) {
     return mockCheckin(userId, nickname, challengeId);
   }
@@ -400,8 +407,10 @@ function enrichTeamChallengeForUser(
 export async function listTeamChallengesWithCounts(
   userId?: string | null,
 ): Promise<TeamChallenge[]> {
+  let challenges: TeamChallenge[];
+
   if (!isAirtableConfigured()) {
-    return sortTeamChallengesNewestFirst(
+    challenges = sortTeamChallengesNewestFirst(
       MOCK_TEAM_CHALLENGES.map((challenge) => {
         const base: TeamChallenge = {
           ...challenge,
@@ -414,30 +423,32 @@ export async function listTeamChallengesWithCounts(
         return enrichTeamChallengeForUser(base, mine);
       }),
     );
+  } else {
+    const [challengeRecords, participantRecords] = await Promise.all([
+      listRecords(TABLES.teamChallenges, undefined, { skipCache: true }),
+      listParticipantRecords(),
+    ]);
+    const counts = participantCountsByChallenge(participantRecords);
+    const myByChallenge = userId
+      ? myParticipationByChallenge(participantRecords, userId)
+      : new Map<string, TeamChallengeParticipant>();
+
+    challenges = sortTeamChallengesNewestFirst(
+      challengeRecords.map((record) => {
+        const challenge = mapTeamChallenge(record);
+        const base: TeamChallenge = {
+          ...challenge,
+          participants: counts.get(challenge.id) ?? 0,
+        };
+        return enrichTeamChallengeForUser(
+          base,
+          myByChallenge.get(challenge.id),
+        );
+      }),
+    );
   }
 
-  const [challengeRecords, participantRecords] = await Promise.all([
-    listRecords(TABLES.teamChallenges, undefined, { skipCache: true }),
-    listParticipantRecords(),
-  ]);
-  const counts = participantCountsByChallenge(participantRecords);
-  const myByChallenge = userId
-    ? myParticipationByChallenge(participantRecords, userId)
-    : new Map<string, TeamChallengeParticipant>();
-
-  return sortTeamChallengesNewestFirst(
-    challengeRecords.map((record) => {
-      const challenge = mapTeamChallenge(record);
-      const base: TeamChallenge = {
-        ...challenge,
-        participants: counts.get(challenge.id) ?? 0,
-      };
-      return enrichTeamChallengeForUser(
-        base,
-        myByChallenge.get(challenge.id),
-      );
-    }),
-  );
+  return enrichChallengesForUser(userId, challenges);
 }
 
 export async function getTeamChallengeDetail(
@@ -451,16 +462,24 @@ export async function getTeamChallengeDetail(
     const participants = listMockParticipantsForChallenge(challengeId);
     const uid = userId ?? MOCK_USER.id;
     const my = findMockParticipant(uid, challengeId) ?? null;
+    const enrichedChallenge = {
+      ...challenge,
+      participants: countUniqueParticipants(participants),
+      checkedInToday: isCheckedInToday(my?.lastCheckinAt),
+    };
+    const canParticipate = userId
+      ? await evaluateParticipation(userId, enrichedChallenge)
+      : false;
 
     return {
       challenge: {
-        ...challenge,
-        participants: countUniqueParticipants(participants),
-        checkedInToday: isCheckedInToday(my?.lastCheckinAt),
+        ...enrichedChallenge,
+        canParticipate,
       },
       participants,
       myRecord: my,
       currentUserId: uid,
+      canParticipate,
     };
   }
 
@@ -478,15 +497,24 @@ export async function getTeamChallengeDetail(
       ? (participants.find((p) => p.userId === userId) ?? null)
       : null;
 
+  const enrichedChallenge = {
+    ...challenge,
+    participants: countUniqueParticipants(participants),
+    checkedInToday: isCheckedInToday(myRecord?.lastCheckinAt),
+  };
+  const canParticipate = userId
+    ? await evaluateParticipation(userId, enrichedChallenge)
+    : false;
+
   return {
     challenge: {
-      ...challenge,
-      participants: countUniqueParticipants(participants),
-      checkedInToday: isCheckedInToday(myRecord?.lastCheckinAt),
+      ...enrichedChallenge,
+      canParticipate,
     },
     participants,
     myRecord,
     currentUserId: userId ?? null,
+    canParticipate,
   };
 }
 

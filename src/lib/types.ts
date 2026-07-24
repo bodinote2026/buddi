@@ -69,6 +69,8 @@ export interface TeamChallenge {
   checkedInToday?: boolean;
   /** Logged-in user's streak; omitted when no participation record exists. */
   myStreakDays?: number;
+  /** Whether the current user can check in to this challenge. */
+  canParticipate?: boolean;
   createdTime?: string;
 }
 
@@ -86,6 +88,7 @@ export interface TeamChallengeDetail {
   participants: TeamChallengeParticipant[];
   myRecord: TeamChallengeParticipant | null;
   currentUserId?: string | null;
+  canParticipate?: boolean;
 }
 
 export interface TeamCheckinResult {

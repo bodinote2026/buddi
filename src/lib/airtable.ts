@@ -409,17 +409,27 @@ export async function createUser(
 }
 
 /** Find a Teams record by exact Name match, or create one with defaults. */
-export async function findOrCreateTeamByName(
+export async function findTeamByName(
   name: string,
-): Promise<AirtableRecord> {
+): Promise<AirtableRecord | null> {
   const trimmed = name.trim();
+  if (!trimmed) return null;
+
   const escaped = escapeFormulaValue(trimmed);
   const records = await listRecords(TABLES.teams, {
     filterByFormula: `{${FIELDS.teams.name}}="${escaped}"`,
     maxRecords: "1",
   });
-  if (records[0]) return records[0];
+  return records[0] ?? null;
+}
 
+export async function findOrCreateTeamByName(
+  name: string,
+): Promise<AirtableRecord> {
+  const existing = await findTeamByName(name);
+  if (existing) return existing;
+
+  const trimmed = name.trim();
   const T = FIELDS.teams;
   return createRecord(TABLES.teams, {
     [T.name]: trimmed,

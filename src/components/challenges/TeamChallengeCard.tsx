@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Camera, Check, Users } from "lucide-react";
+import { PARTICIPATION_DENIED_MESSAGE } from "@/lib/challenge-eligibility";
 import type { TeamChallenge } from "@/lib/types";
 
 interface TeamChallengeCardProps {
@@ -13,6 +14,9 @@ export function TeamChallengeCard({
   showCheckin = false,
   onCheckin,
 }: TeamChallengeCardProps) {
+  const canParticipate = challenge.canParticipate ?? false;
+  const checkedInToday = challenge.checkedInToday ?? false;
+
   return (
     <article className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
       <Link href={`/challenges/team/${challenge.id}`} className="block">
@@ -43,28 +47,36 @@ export function TeamChallengeCard({
       </Link>
 
       {showCheckin && (
-        <button
-          type="button"
-          disabled={challenge.checkedInToday}
-          onClick={() => onCheckin?.(challenge)}
-          className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition-colors ${
-            challenge.checkedInToday
-              ? "bg-[#E8F5EE] text-success"
-              : "border border-primary bg-white text-primary hover:bg-primary-light"
-          }`}
-        >
-          {challenge.checkedInToday ? (
-            <>
-              <Check size={18} aria-hidden />
-              인증 완료
-            </>
+        <>
+          {!canParticipate ? (
+            <p className="mt-3 rounded-xl bg-[#F0F0F5] px-3 py-3 text-center text-[13px] text-text-secondary">
+              {PARTICIPATION_DENIED_MESSAGE}
+            </p>
           ) : (
-            <>
-              <Camera size={18} aria-hidden />
-              오늘 인증하기
-            </>
+            <button
+              type="button"
+              disabled={checkedInToday}
+              onClick={() => onCheckin?.(challenge)}
+              className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition-colors ${
+                checkedInToday
+                  ? "bg-[#E8F5EE] text-success"
+                  : "border border-primary bg-white text-primary hover:bg-primary-light"
+              }`}
+            >
+              {checkedInToday ? (
+                <>
+                  <Check size={18} aria-hidden />
+                  인증 완료
+                </>
+              ) : (
+                <>
+                  <Camera size={18} aria-hidden />
+                  오늘 인증하기
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </>
       )}
     </article>
   );

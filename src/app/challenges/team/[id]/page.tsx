@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { TeamCheckinModal } from "@/components/challenges/TeamCheckinModal";
 import { useToast } from "@/components/ui/Toast";
+import { PARTICIPATION_DENIED_MESSAGE } from "@/lib/challenge-eligibility";
 import { formatPoints } from "@/lib/format";
 import { ME_API_KEY } from "@/lib/me";
 import type {
@@ -76,9 +77,11 @@ export default function TeamChallengeDetailPage() {
     );
   }
 
-  const { challenge, participants, myRecord, currentUserId } = data;
+  const { challenge, participants, myRecord, currentUserId, canParticipate } =
+    data;
   const myUserId = currentUserId ?? myRecord?.userId ?? "";
   const checkedInToday = challenge.checkedInToday ?? false;
+  const canCheckIn = canParticipate ?? challenge.canParticipate ?? false;
 
   return (
     <>
@@ -187,28 +190,34 @@ export default function TeamChallengeDetailPage() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            disabled={checkedInToday}
-            onClick={() => setCheckinOpen(true)}
-            className={`mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-semibold ${
-              checkedInToday
-                ? "bg-[#E8F5EE] text-success"
-                : "border border-primary bg-white text-primary hover:bg-primary-light"
-            }`}
-          >
-            {checkedInToday ? (
-              <>
-                <Check size={18} aria-hidden />
-                인증 완료
-              </>
-            ) : (
-              <>
-                <Camera size={18} aria-hidden />
-                오늘 인증하기
-              </>
-            )}
-          </button>
+          {!canCheckIn ? (
+            <p className="mt-4 rounded-xl bg-[#F0F0F5] px-3 py-3 text-center text-[13px] text-text-secondary">
+              {PARTICIPATION_DENIED_MESSAGE}
+            </p>
+          ) : (
+            <button
+              type="button"
+              disabled={checkedInToday}
+              onClick={() => setCheckinOpen(true)}
+              className={`mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-semibold ${
+                checkedInToday
+                  ? "bg-[#E8F5EE] text-success"
+                  : "border border-primary bg-white text-primary hover:bg-primary-light"
+              }`}
+            >
+              {checkedInToday ? (
+                <>
+                  <Check size={18} aria-hidden />
+                  인증 완료
+                </>
+              ) : (
+                <>
+                  <Camera size={18} aria-hidden />
+                  오늘 인증하기
+                </>
+              )}
+            </button>
+          )}
         </section>
       </div>
 

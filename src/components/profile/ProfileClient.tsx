@@ -66,9 +66,14 @@ function ProfileContent({
   );
   const [intro, setIntro] = useState(user.intro ?? "");
   const [interests, setInterests] = useState<string[]>(user.interests ?? []);
+  const [company, setCompany] = useState(user.company ?? "");
+  const [team, setTeam] = useState(user.team ?? "");
   const [saving, setSaving] = useState(false);
 
-  const canSave = nickname.trim().length > 0;
+  const canSave =
+    nickname.trim().length > 0 &&
+    company.trim().length > 0 &&
+    team.trim().length > 0;
 
   function openEdit() {
     setName(user.name);
@@ -76,6 +81,8 @@ function ProfileContent({
     setAge(user.age != null && user.age > 0 ? String(user.age) : "");
     setIntro(user.intro ?? "");
     setInterests(user.interests ?? []);
+    setCompany(user.company ?? "");
+    setTeam(user.team ?? "");
     setEditOpen(true);
   }
 
@@ -95,11 +102,15 @@ function ProfileContent({
     const nextNickname = nickname.trim();
     const parsedAge = age.trim() ? Math.floor(Number(age)) : null;
     const nextIntro = intro.trim();
+    const nextCompany = company.trim();
+    const nextTeam = team.trim();
     const optimistic: User = {
       ...user,
       name: nextName,
       nickname: nextNickname,
       displayName: getDisplayName({ name: nextName, nickname: nextNickname }),
+      company: nextCompany,
+      team: nextTeam,
       age:
         parsedAge != null && parsedAge > 0 && !Number.isNaN(parsedAge)
           ? parsedAge
@@ -117,6 +128,8 @@ function ProfileContent({
         body: JSON.stringify({
           name: nextName,
           nickname: nextNickname,
+          company: nextCompany,
+          team: nextTeam,
           age:
             parsedAge != null && parsedAge > 0 && !Number.isNaN(parsedAge)
               ? parsedAge
@@ -310,6 +323,28 @@ function ProfileContent({
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder="다른 사람에게 보여질 별명"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <label className="mb-3 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            회사
+          </span>
+          <input
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="예: 바디노트"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <label className="mb-3 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            부서
+          </span>
+          <input
+            value={team}
+            onChange={(e) => setTeam(e.target.value)}
+            placeholder="예: 마케팅 1팀"
             className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
           />
         </label>
