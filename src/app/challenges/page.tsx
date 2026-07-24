@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import useSWR, { mutate } from "swr";
 import {
@@ -56,6 +56,41 @@ function leaderboardKey(scope: LeaderboardScope) {
   return `/api/teams/leaderboard?scope=${scope}`;
 }
 
+function challengeCanParticipate(
+  challenge: TeamChallenge,
+  profile: User,
+): boolean {
+  if (challenge.canParticipate !== undefined) {
+    return challenge.canParticipate;
+  }
+
+  const company = profile.company?.trim();
+  const team = profile.team?.trim();
+  if (!company || !team) return false;
+
+  return (
+    challenge.company?.trim() === company &&
+    challenge.teamName?.trim() === team
+  );
+}
+
+function partitionChallenges(challenges: TeamChallenge[], profile: User) {
+  const participatable: TeamChallenge[] = [];
+  const viewOnly: TeamChallenge[] = [];
+
+  for (const challenge of challenges) {
+    const canParticipate = challengeCanParticipate(challenge, profile);
+    const normalized = { ...challenge, canParticipate };
+    if (canParticipate) {
+      participatable.push(normalized);
+    } else {
+      viewOnly.push(normalized);
+    }
+  }
+
+  return { participatable, viewOnly };
+}
+
 export default function ChallengesPage() {
   const { showToast } = useToast();
   const { status } = useSession();
@@ -81,6 +116,11 @@ export default function ChallengesPage() {
 
   const { data: challenges = MOCK_TEAM_CHALLENGES, mutate: refreshChallenges } =
     useSWR(TEAM_CHALLENGES_KEY, fetchTeamChallenges);
+
+  const { participatable, viewOnly } = useMemo(
+    () => partitionChallenges(challenges, profile),
+    [challenges, profile],
+  );
 
   const [createOpen, setCreateOpen] = useState(false);
   const [checkinTarget, setCheckinTarget] = useState<TeamChallenge | null>(null);
@@ -265,20 +305,53 @@ export default function ChallengesPage() {
           )}
         </section>
 
-        <section>
-          <h2 className="mb-3 text-[18px] font-bold text-text-primary">
-            참여 중인 챌린지
-          </h2>
-          <div className="space-y-3">
-            {challenges.map((c) => (
-              <TeamChallengeCard
-                key={c.id}
-                challenge={c}
-                showCheckin
-                onCheckin={setCheckinTarget}
-              />
-            ))}
-          </div>
+        <section className="space-y-6">
+          {participatable.length > 0 ? (
+            <div>
+              <h2 className="mb-3 text-[18px] font-bold text-text-primary">
+                내가 참여 가능한 챌린지
+              </h2>
+              <div className="space-y-3">
+                {participatable.map((c) => (
+                  <TeamChallengeCard
+                    key={c.id}
+                    challenge={c}
+                    showCheckin
+                    onCheckin={setCheckinTarget}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {viewOnly.length > 0 ? (
+            <div>
+              <h2 className="mb-3 text-[18px] font-bold text-text-primary">
+                다른 회사·부서 챌린지
+              </h2>
+              <div className="space-y-3">
+                {viewOnly.map((c) => (
+                  <TeamChallengeCard
+                    key={c.id}
+                    challenge={c}
+                    showCheckin
+                    onCheckin={setCheckinTarget}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {participatable.length === 0 && viewOnly.length === 0 ? (
+            <div>
+              <h2 className="mb-3 text-[18px] font-bold text-text-primary">
+                참여 중인 챌린지
+              </h2>
+              <p className="rounded-2xl bg-surface px-4 py-8 text-center text-[14px] text-text-secondary shadow-[var(--shadow-card)]">
+                아직 진행 중인 팀 챌린지가 없어요
+              </p>
+            </div>
+          ) : null}
         </section>
       </div>
 

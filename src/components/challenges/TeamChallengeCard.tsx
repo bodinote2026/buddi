@@ -16,17 +16,29 @@ export function TeamChallengeCard({
 }: TeamChallengeCardProps) {
   const canParticipate = challenge.canParticipate ?? false;
   const checkedInToday = challenge.checkedInToday ?? false;
+  const viewOnly = showCheckin && !canParticipate;
 
   return (
-    <article className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
+    <article
+      className={`relative rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)] ${
+        viewOnly ? "opacity-70" : ""
+      }`}
+    >
       <Link href={`/challenges/team/${challenge.id}`} className="block">
         <div className="flex items-start justify-between gap-2">
           <p className="text-[12px] font-medium text-primary">
             {challenge.company} · {challenge.teamName}
           </p>
-          <span className="text-[22px] font-bold text-text-primary">
-            {challenge.completionRate}%
-          </span>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {viewOnly ? (
+              <span className="rounded-full bg-[#ECECF2] px-2 py-0.5 text-[10px] font-semibold text-text-secondary">
+                열람만 가능
+              </span>
+            ) : null}
+            <span className="text-[22px] font-bold text-text-primary">
+              {challenge.completionRate}%
+            </span>
+          </div>
         </div>
         <h3 className="mt-1 text-[16px] font-bold text-text-primary">
           {challenge.title}
@@ -48,10 +60,20 @@ export function TeamChallengeCard({
 
       {showCheckin && (
         <>
-          {!canParticipate ? (
-            <p className="mt-3 rounded-xl bg-[#F0F0F5] px-3 py-3 text-center text-[13px] text-text-secondary">
-              {PARTICIPATION_DENIED_MESSAGE}
-            </p>
+          {viewOnly ? (
+            <>
+              <button
+                type="button"
+                disabled
+                className="mt-3 flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full border border-[#E0E0E8] bg-[#F8F8FB] text-[14px] font-semibold text-text-secondary opacity-60"
+              >
+                <Camera size={18} aria-hidden />
+                오늘 인증하기
+              </button>
+              <p className="mt-2 text-center text-[12px] text-text-secondary">
+                {PARTICIPATION_DENIED_MESSAGE}
+              </p>
+            </>
           ) : (
             <button
               type="button"
