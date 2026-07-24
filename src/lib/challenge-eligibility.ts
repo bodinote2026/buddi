@@ -45,13 +45,19 @@ export async function resolveUserTeamRecordId(
   user: User,
 ): Promise<string | null> {
   const teamName = user.team?.trim();
-  if (!teamName) return null;
+  const company = user.company?.trim();
+  if (!teamName || !company) return null;
 
   if (!isAirtableConfigured()) {
-    return MOCK_TEAMS.find((team) => team.name.trim() === teamName)?.id ?? null;
+    return (
+      MOCK_TEAMS.find(
+        (team) =>
+          team.name.trim() === teamName && team.company?.trim() === company,
+      )?.id ?? null
+    );
   }
 
-  const record = await findTeamByName(teamName);
+  const record = await findTeamByName(teamName, company);
   return record?.id ?? null;
 }
 

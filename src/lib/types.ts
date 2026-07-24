@@ -54,6 +54,7 @@ export interface User {
 export interface Team {
   id: string;
   name: string;
+  company?: string;
   points: number;
   trend: "상승" | "유지" | "하락";
 }

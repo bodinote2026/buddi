@@ -63,6 +63,7 @@ export const FIELDS = {
   },
   teams: {
     name: "Name",
+    company: "Company",
     points: "Points",
     trend: "Trend",
   },
@@ -264,7 +265,7 @@ export const TABLES = {
   pointLedger: "PointLedger",
 } as const;
 
-function escapeFormulaValue(value: string) {
+export function escapeFormulaValue(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
@@ -408,16 +409,20 @@ export async function createUser(
   return createRecord(TABLES.users, fields);
 }
 
-/** Find a Teams record by exact Name match, or create one with defaults. */
+/** Find a Teams record by exact Name + Company match. */
 export async function findTeamByName(
   name: string,
+  company: string,
 ): Promise<AirtableRecord | null> {
-  const trimmed = name.trim();
-  if (!trimmed) return null;
+  const trimmedName = name.trim();
+  const trimmedCompany = company.trim();
+  if (!trimmedName || !trimmedCompany) return null;
 
-  const escaped = escapeFormulaValue(trimmed);
+  const escapedName = escapeFormulaValue(trimmedName);
+  const escapedCompany = escapeFormulaValue(trimmedCompany);
+  const T = FIELDS.teams;
   const records = await listRecords(TABLES.teams, {
-    filterByFormula: `{${FIELDS.teams.name}}="${escaped}"`,
+    filterByFormula: `AND({${T.name}}="${escapedName}",{${T.company}}="${escapedCompany}")`,
     maxRecords: "1",
   });
   return records[0] ?? null;
@@ -425,14 +430,17 @@ export async function findTeamByName(
 
 export async function findOrCreateTeamByName(
   name: string,
+  company: string,
 ): Promise<AirtableRecord> {
-  const existing = await findTeamByName(name);
+  const existing = await findTeamByName(name, company);
   if (existing) return existing;
 
-  const trimmed = name.trim();
+  const trimmedName = name.trim();
+  const trimmedCompany = company.trim();
   const T = FIELDS.teams;
   return createRecord(TABLES.teams, {
-    [T.name]: trimmed,
+    [T.name]: trimmedName,
+    [T.company]: trimmedCompany,
     [T.points]: 0,
     [T.trend]: "유지",
   });

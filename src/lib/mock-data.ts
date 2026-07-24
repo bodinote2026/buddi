@@ -76,11 +76,41 @@ export const MOCK_EXPLORE_CHALLENGES: ExploreChallenge[] = [
 ];
 
 export const MOCK_TEAMS: Team[] = [
-  { id: "team-1", name: "마케팅 1팀", points: 18420, trend: "상승" },
-  { id: "team-2", name: "개발본부", points: 16780, trend: "유지" },
-  { id: "team-3", name: "디자인팀", points: 14250, trend: "상승" },
-  { id: "team-4", name: "영업 2팀", points: 12900, trend: "하락" },
-  { id: "team-5", name: "경영지원팀", points: 11340, trend: "하락" },
+  {
+    id: "team-1",
+    name: "마케팅 1팀",
+    company: "바디노트",
+    points: 18420,
+    trend: "상승",
+  },
+  {
+    id: "team-2",
+    name: "개발본부",
+    company: "바디노트",
+    points: 16780,
+    trend: "유지",
+  },
+  {
+    id: "team-3",
+    name: "디자인팀",
+    company: "바디노트",
+    points: 14250,
+    trend: "상승",
+  },
+  {
+    id: "team-4",
+    name: "영업 2팀",
+    company: "바디노트",
+    points: 12900,
+    trend: "하락",
+  },
+  {
+    id: "team-5",
+    name: "경영지원팀",
+    company: "바디노트",
+    points: 11340,
+    trend: "하락",
+  },
 ];
 
 export const MOCK_TEAM_CHALLENGES: TeamChallenge[] = [

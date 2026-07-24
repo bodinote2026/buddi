@@ -329,9 +329,11 @@ export function mapBuddy(record: AirtableRecord): Buddy {
 export function mapTeam(record: AirtableRecord): Team {
   const f = record.fields;
   const T = FIELDS.teams;
+  const company = asString(f[T.company]);
   return {
     id: record.id,
     name: asString(f[T.name]),
+    company: company || undefined,
     points: asNumber(f[T.points]),
     trend: asTrend(f[T.trend]),
   };

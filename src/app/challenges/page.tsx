@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import useSWR, { mutate } from "swr";
 import {
   Crown,
@@ -23,6 +24,8 @@ import type {
   TeamCheckinResult,
   User,
 } from "@/lib/types";
+
+type LeaderboardScope = "all" | "mine";
 
 function TrendIcon({ trend }: { trend: Team["trend"] }) {
   if (trend === "상승")
@@ -49,10 +52,33 @@ async function fetchTeamChallenges(): Promise<TeamChallenge[]> {
   return fetchJson<TeamChallenge[]>(TEAM_CHALLENGES_KEY);
 }
 
+function leaderboardKey(scope: LeaderboardScope) {
+  return `/api/teams/leaderboard?scope=${scope}`;
+}
+
 export default function ChallengesPage() {
   const { showToast } = useToast();
-  const { data: me = MOCK_USER } = useSWR<User>(ME_API_KEY, fetchJson<User>);
-  const { data: teams = MOCK_TEAMS } = useSWR("/api/teams/leaderboard", fetchJson<Team[]>);
+  const { status } = useSession();
+  const isLoggedIn = status === "authenticated";
+  const { data: me } = useSWR<User>(
+    isLoggedIn ? ME_API_KEY : null,
+    fetchJson<User>,
+  );
+  const profile = me ?? MOCK_USER;
+
+  const [leaderboardScope, setLeaderboardScope] =
+    useState<LeaderboardScope>("mine");
+  const effectiveScope: LeaderboardScope = isLoggedIn ? leaderboardScope : "all";
+  const company = profile.company?.trim() ?? "";
+  const team = profile.team?.trim() ?? "";
+  const showMineEmpty =
+    isLoggedIn && effectiveScope === "mine" && !company;
+
+  const { data: teams = MOCK_TEAMS } = useSWR<Team[]>(
+    showMineEmpty ? null : leaderboardKey(effectiveScope),
+    fetchJson<Team[]>,
+  );
+
   const { data: challenges = MOCK_TEAM_CHALLENGES, mutate: refreshChallenges } =
     useSWR(TEAM_CHALLENGES_KEY, fetchTeamChallenges);
 
@@ -61,8 +87,6 @@ export default function ChallengesPage() {
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const company = me.company?.trim() ?? "";
-  const team = me.team?.trim() ?? "";
   const canCreate = title.trim().length > 0 && Boolean(company && team);
 
   async function handleCreate() {
@@ -131,7 +155,10 @@ export default function ChallengesPage() {
         ),
       false,
     );
-    void mutate("/api/teams/leaderboard");
+    void mutate(
+      (key) =>
+        typeof key === "string" && key.startsWith("/api/teams/leaderboard"),
+    );
     void mutate(ME_API_KEY);
     showToast(`오늘 인증 완료! +50P (총 ${result.mileage.toLocaleString("ko-KR")}P)`);
   }
@@ -159,35 +186,83 @@ export default function ChallengesPage() {
           <h2 className="mb-3 text-[18px] font-bold text-text-primary">
             팀 리더보드
           </h2>
-          <ul className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
-            {teams.map((entry, index) => (
-              <li
-                key={entry.id}
-                className="flex items-center gap-3 border-b border-[#F0F0F5] px-4 py-3.5 last:border-b-0"
+
+          {isLoggedIn && (
+            <div className="mb-3 flex rounded-full bg-[#ECECF2] p-1">
+              <button
+                type="button"
+                onClick={() => setLeaderboardScope("mine")}
+                className={`flex-1 rounded-full py-2 text-[13px] font-semibold transition-colors ${
+                  effectiveScope === "mine"
+                    ? "bg-white text-text-primary shadow-sm"
+                    : "text-text-secondary"
+                }`}
               >
-                {index === 0 ? (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
-                    <Crown size={14} aria-hidden />
-                  </span>
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECECF2] text-[13px] font-semibold text-text-secondary">
-                    {index + 1}
-                  </span>
-                )}
-                <span className="flex-1 text-[14px] font-semibold text-text-primary">
-                  {entry.name}
-                </span>
-                <TrendIcon trend={entry.trend} />
-                <span
-                  className={`min-w-[72px] text-right text-[14px] font-bold ${
-                    index === 0 ? "text-primary" : "text-text-primary"
-                  }`}
+                우리 회사
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaderboardScope("all")}
+                className={`flex-1 rounded-full py-2 text-[13px] font-semibold transition-colors ${
+                  effectiveScope === "all"
+                    ? "bg-white text-text-primary shadow-sm"
+                    : "text-text-secondary"
+                }`}
+              >
+                전체
+              </button>
+            </div>
+          )}
+
+          {showMineEmpty ? (
+            <div className="rounded-2xl bg-surface px-4 py-8 text-center shadow-[var(--shadow-card)]">
+              <p className="text-[14px] font-semibold text-text-primary">
+                회사 정보가 없어 순위를 볼 수 없어요
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-text-secondary">
+                프로필에서 회사와 부서를 입력하면
+                <br />
+                우리 회사 팀 순위를 확인할 수 있어요
+              </p>
+            </div>
+          ) : (
+            <ul className="overflow-hidden rounded-2xl bg-surface shadow-[var(--shadow-card)]">
+              {teams.map((entry, index) => (
+                <li
+                  key={entry.id}
+                  className="flex items-center gap-3 border-b border-[#F0F0F5] px-4 py-3.5 last:border-b-0"
                 >
-                  {entry.points.toLocaleString("ko-KR")}P
-                </span>
-              </li>
-            ))}
-          </ul>
+                  {index === 0 ? (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+                      <Crown size={14} aria-hidden />
+                    </span>
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECECF2] text-[13px] font-semibold text-text-secondary">
+                      {index + 1}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[14px] font-semibold text-text-primary">
+                      {entry.name}
+                    </span>
+                    {effectiveScope === "all" && entry.company ? (
+                      <span className="mt-0.5 block truncate text-[11px] text-text-secondary">
+                        {entry.company}
+                      </span>
+                    ) : null}
+                  </span>
+                  <TrendIcon trend={entry.trend} />
+                  <span
+                    className={`min-w-[72px] text-right text-[14px] font-bold ${
+                      index === 0 ? "text-primary" : "text-text-primary"
+                    }`}
+                  >
+                    {entry.points.toLocaleString("ko-KR")}P
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section>
