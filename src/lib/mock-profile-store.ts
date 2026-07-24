@@ -14,3 +14,7 @@ export function saveMockProfile(user: User) {
 export function getMockProfile(id: string): User | undefined {
   return store.get(id);
 }
+
+export function listMockProfiles(): User[] {
+  return [...store.values()];
+}

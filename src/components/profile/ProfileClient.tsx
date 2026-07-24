@@ -19,6 +19,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import {
   CONNECTED_DEVICES,
+  INTEREST_OPTIONS,
   MOCK_USER,
   PROFILE_SETTINGS,
 } from "@/lib/mock-data";
@@ -60,6 +61,11 @@ function ProfileContent({
   const [editOpen, setEditOpen] = useState(false);
   const [name, setName] = useState(user.name);
   const [nickname, setNickname] = useState(user.nickname ?? "");
+  const [age, setAge] = useState(
+    user.age != null && user.age > 0 ? String(user.age) : "",
+  );
+  const [intro, setIntro] = useState(user.intro ?? "");
+  const [interests, setInterests] = useState<string[]>(user.interests ?? []);
   const [saving, setSaving] = useState(false);
 
   const canSave = nickname.trim().length > 0;
@@ -67,7 +73,18 @@ function ProfileContent({
   function openEdit() {
     setName(user.name);
     setNickname(user.nickname ?? "");
+    setAge(user.age != null && user.age > 0 ? String(user.age) : "");
+    setIntro(user.intro ?? "");
+    setInterests(user.interests ?? []);
     setEditOpen(true);
+  }
+
+  function toggleInterest(interest: string) {
+    setInterests((current) =>
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : [...current, interest],
+    );
   }
 
   async function handleSave() {
@@ -76,11 +93,19 @@ function ProfileContent({
     const prev = user;
     const nextName = name.trim();
     const nextNickname = nickname.trim();
+    const parsedAge = age.trim() ? Math.floor(Number(age)) : null;
+    const nextIntro = intro.trim();
     const optimistic: User = {
       ...user,
       name: nextName,
       nickname: nextNickname,
       displayName: getDisplayName({ name: nextName, nickname: nextNickname }),
+      age:
+        parsedAge != null && parsedAge > 0 && !Number.isNaN(parsedAge)
+          ? parsedAge
+          : undefined,
+      intro: nextIntro || undefined,
+      interests: interests.length > 0 ? interests : undefined,
     };
     onUserChange(optimistic);
     setEditOpen(false);
@@ -89,7 +114,16 @@ function ProfileContent({
       const res = await fetch("/api/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nextName, nickname: nextNickname }),
+        body: JSON.stringify({
+          name: nextName,
+          nickname: nextNickname,
+          age:
+            parsedAge != null && parsedAge > 0 && !Number.isNaN(parsedAge)
+              ? parsedAge
+              : null,
+          intro: nextIntro,
+          interests,
+        }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? "저장 실패");
@@ -259,6 +293,9 @@ function ProfileContent({
         title="프로필 편집"
         onClose={() => !saving && setEditOpen(false)}
       >
+        <p className="mb-4 text-[12px] text-text-secondary">
+          이 정보를 입력하면 동료들에게 버디로 추천될 수 있어요
+        </p>
         <label className="mb-3 block">
           <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
             이름
@@ -270,7 +307,7 @@ function ProfileContent({
             className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
           />
         </label>
-        <label className="mb-5 block">
+        <label className="mb-3 block">
           <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
             별명
           </span>
@@ -281,6 +318,55 @@ function ProfileContent({
             className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
           />
         </label>
+        <label className="mb-3 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            나이
+          </span>
+          <input
+            type="number"
+            min={1}
+            max={120}
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            placeholder="선택 입력"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <label className="mb-3 block">
+          <span className="mb-1.5 block text-[13px] font-bold text-text-primary">
+            한 줄 소개
+          </span>
+          <input
+            value={intro}
+            onChange={(e) => setIntro(e.target.value)}
+            placeholder="나를 소개해보세요"
+            className="h-12 w-full rounded-xl bg-[#F0F0F5] px-4 text-[14px] outline-none placeholder:text-text-secondary focus:ring-2 focus:ring-primary/30"
+          />
+        </label>
+        <div className="mb-5">
+          <span className="mb-2 block text-[13px] font-bold text-text-primary">
+            관심사
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {INTEREST_OPTIONS.map((interest) => {
+              const selected = interests.includes(interest);
+              return (
+                <button
+                  key={interest}
+                  type="button"
+                  onClick={() => toggleInterest(interest)}
+                  className={`rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    selected
+                      ? "bg-primary-light text-primary"
+                      : "bg-[#F0F0F5] text-text-secondary"
+                  }`}
+                >
+                  {interest}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <button
           type="button"
           disabled={!canSave || saving}

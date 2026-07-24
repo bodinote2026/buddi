@@ -182,6 +182,8 @@ export const MOCK_STORE_ITEMS: StoreItem[] = [
   },
 ];
 
+export const INTEREST_OPTIONS = ["운동", "맛집", "여행"] as const;
+
 export const INTEREST_STYLES: Record<string, { emoji: string; className: string }> = {
   운동: { emoji: "🏋", className: "bg-primary-light text-primary" },
   맛집: { emoji: "🍽", className: "bg-[#F5EDE3] text-[#A67C52]" },

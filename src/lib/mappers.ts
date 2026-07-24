@@ -82,6 +82,35 @@ export function mapUser(record: AirtableRecord): User {
     provider: asString(f[U.provider]) || undefined,
     providerId: asString(f[U.providerId]) || undefined,
     email: asString(f[U.email]) || undefined,
+    age: (() => {
+      const value = f[U.age];
+      return typeof value === "number" && value > 0
+        ? Math.floor(value)
+        : undefined;
+    })(),
+    intro: asString(f[U.intro]) || undefined,
+    interests: (() => {
+      const values = asStringArray(f[U.interests]);
+      return values.length > 0 ? values : undefined;
+    })(),
+  };
+}
+
+export function mapUserToBuddy(record: AirtableRecord): Buddy {
+  const user = mapUser(record);
+  const nickname = user.nickname ?? user.displayName;
+  return {
+    id: user.id,
+    name: nickname,
+    age: user.age,
+    temperature: user.temperature ?? 36.5,
+    company: user.company ?? "",
+    team: user.team ?? "",
+    intro: user.intro,
+    interests: user.interests,
+    avatarUrl:
+      user.avatarUrl ??
+      `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(nickname || user.id)}`,
   };
 }
 
@@ -282,16 +311,19 @@ export function mapBuddy(record: AirtableRecord): Buddy {
   const f = record.fields;
   const B = FIELDS.buddies;
   const name = asString(f[B.name]);
+  const ageValue = asNumber(f[B.age]);
   return {
     id: record.id,
     name,
-    age: asNumber(f[B.age]),
-    temperature: asNumber(f[B.temperature]),
-    category: asString(f[B.category]),
-    distanceKm: asNumber(f[B.distanceKm]),
-    district: asString(f[B.district]),
-    intro: asString(f[B.intro]),
-    interests: asStringArray(f[B.interests]),
+    age: ageValue > 0 ? ageValue : undefined,
+    temperature: asNumber(f[B.temperature], 36.5),
+    company: "",
+    team: asString(f[B.district]) || asString(f[B.category]),
+    intro: asString(f[B.intro]) || undefined,
+    interests: (() => {
+      const values = asStringArray(f[B.interests]);
+      return values.length > 0 ? values : undefined;
+    })(),
     avatarUrl:
       asAttachmentUrl(f[B.avatarUrl]) ||
       `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name || record.id)}`,

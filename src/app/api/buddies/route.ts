@@ -1,48 +1,51 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import {
-  FIELDS,
-  isAirtableConfigured,
-  listRecords,
-  TABLES,
-} from "@/lib/airtable";
-import { mapBuddy } from "@/lib/mappers";
+  getUserCompany,
+  listCompanyBuddies,
+} from "@/lib/company-buddies";
+import { resolveCheckinUserId } from "@/lib/team-checkin";
 import type { ApiResponse, Buddy } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const recommended = request.nextUrl.searchParams.get("recommended") === "true";
+const EMPTY_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+};
 
+export async function GET() {
   try {
-    if (!isAirtableConfigured()) {
-      return NextResponse.json({
-        data: [],
-        error: null,
-      } satisfies ApiResponse<Buddy[]>);
+    const session = await auth();
+    const userId = await resolveCheckinUserId(session);
+    if (!userId) {
+      return NextResponse.json(
+        {
+          data: [],
+          error: null,
+        } satisfies ApiResponse<Buddy[]>,
+        { headers: EMPTY_HEADERS },
+      );
     }
 
-    const params: Record<string, string> = {
-      "sort[0][field]": FIELDS.buddies.temperature,
-      "sort[0][direction]": "desc",
-    };
-    if (recommended) {
-      params.filterByFormula = `{${FIELDS.buddies.isRecommended}}=TRUE()`;
+    const company = await getUserCompany(userId);
+    if (!company) {
+      return NextResponse.json(
+        {
+          data: [],
+          error: null,
+        } satisfies ApiResponse<Buddy[]>,
+        { headers: EMPTY_HEADERS },
+      );
     }
 
-    const records = await listRecords(TABLES.buddies, params, {
-      skipCache: true,
-    });
+    const data = await listCompanyBuddies(userId, company);
 
     return NextResponse.json(
       {
-        data: records.map(mapBuddy),
+        data,
         error: null,
       } satisfies ApiResponse<Buddy[]>,
-      {
-        headers: {
-          "Cache-Control": "no-store, max-age=0",
-        },
-      },
+      { headers: EMPTY_HEADERS },
     );
   } catch {
     return NextResponse.json(
@@ -50,11 +53,7 @@ export async function GET(request: NextRequest) {
         data: [],
         error: null,
       } satisfies ApiResponse<Buddy[]>,
-      {
-        headers: {
-          "Cache-Control": "no-store, max-age=0",
-        },
-      },
+      { headers: EMPTY_HEADERS },
     );
   }
 }

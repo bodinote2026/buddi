@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import useSWR from "swr";
-import { MapPin, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { BuddyChatButton } from "@/components/buddies/BuddyChatButton";
 import { BuddyEmptyState } from "@/components/buddies/BuddyEmptyState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { INTEREST_STYLES } from "@/lib/mock-data";
 import { formatTemperature } from "@/lib/format";
+import { formatBuddyName, formatBuddyOrg } from "@/lib/buddy-display";
 import type { ApiResponse, Buddy } from "@/lib/types";
 
 const BUDDIES_KEY = "/api/buddies";
@@ -39,17 +39,17 @@ function BuddyListItem({ buddy }: { buddy: Buddy }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-[16px] font-bold text-text-primary">
-                {buddy.name}{" "}
-                <span className="font-medium text-text-secondary">
-                  {buddy.age}
-                </span>
-              </h3>
-              <p className="mt-0.5 flex items-center gap-1 text-[13px] text-text-secondary">
-                <MapPin size={13} aria-hidden />
-                {buddy.district} · {buddy.distanceKm}km
+              <p className="text-[12px] font-medium text-primary">
+                {formatBuddyOrg(buddy)}
               </p>
-              <p className="mt-1 text-[13px] text-text-primary">{buddy.intro}</p>
+              <h3 className="mt-0.5 text-[16px] font-bold text-text-primary">
+                {formatBuddyName(buddy)}
+              </h3>
+              {buddy.intro && (
+                <p className="mt-1 text-[13px] text-text-primary">
+                  {buddy.intro}
+                </p>
+              )}
             </div>
             <div className="shrink-0 text-right">
               <p className="text-[20px] font-bold text-text-primary">
@@ -61,30 +61,29 @@ function BuddyListItem({ buddy }: { buddy: Buddy }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {(buddy.interests ?? []).map((interest) => {
-          const style = INTEREST_STYLES[interest] ?? {
-            emoji: "✨",
-            className: "bg-[#F0F0F5] text-text-secondary",
-          };
-          return (
-            <span
-              key={interest}
-              className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${style.className}`}
-            >
-              {style.emoji} {interest}
-            </span>
-          );
-        })}
-      </div>
+      {(buddy.interests?.length ?? 0) > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {buddy.interests!.map((interest) => {
+            const style = INTEREST_STYLES[interest] ?? {
+              emoji: "✨",
+              className: "bg-[#F0F0F5] text-text-secondary",
+            };
+            return (
+              <span
+                key={interest}
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-medium ${style.className}`}
+              >
+                {style.emoji} {interest}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
-      <Link
-        href={`/chat/${buddy.id}`}
+      <BuddyChatButton
+        label="채팅 참여하기"
         className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary text-[14px] font-semibold text-white"
-      >
-        <MessageCircle size={16} aria-hidden />
-        채팅 참여하기
-      </Link>
+      />
     </article>
   );
 }

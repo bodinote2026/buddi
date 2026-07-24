@@ -26,6 +26,9 @@ export const FIELDS = {
     provider: "Provider",
     providerId: "Provider ID",
     email: "Email",
+    age: "Age",
+    intro: "Intro",
+    interests: "Interests",
   },
   challenges: {
     title: "Title",

@@ -27,7 +27,7 @@ export function useHomeData() {
       revalidateOnFocus: false,
     },
   );
-  const buddies = useSWR<Buddy[]>("/api/buddies?recommended=true", fetcher, {
+  const buddies = useSWR<Buddy[]>("/api/buddies", fetcher, {
     revalidateOnFocus: false,
   });
 

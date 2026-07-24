@@ -139,6 +139,9 @@ export async function PATCH(request: Request) {
       nickname?: string;
       company?: string;
       team?: string;
+      age?: number | null;
+      intro?: string;
+      interests?: string[];
     };
 
     const nickname = body.nickname?.trim() ?? "";
@@ -156,6 +159,19 @@ export async function PATCH(request: Request) {
     const hasOrgFields = "company" in body || "team" in body;
     const company = body.company?.trim() ?? "";
     const team = body.team?.trim() ?? "";
+    const hasBuddyFields =
+      "age" in body || "intro" in body || "interests" in body;
+    const age =
+      "age" in body && body.age != null && body.age > 0
+        ? Math.floor(body.age)
+        : undefined;
+    const intro = "intro" in body ? body.intro?.trim() ?? "" : undefined;
+    const interests =
+      "interests" in body
+        ? (body.interests ?? []).filter((value): value is string =>
+            typeof value === "string",
+          )
+        : undefined;
 
     if (hasOrgFields && (!company || !team)) {
       return NextResponse.json(
@@ -178,6 +194,14 @@ export async function PATCH(request: Request) {
         nickname,
         displayName: getDisplayName({ name, nickname }),
         ...(hasOrgFields ? { company, team } : {}),
+        ...(hasBuddyFields
+          ? {
+              age,
+              intro: intro || undefined,
+              interests:
+                interests && interests.length > 0 ? interests : undefined,
+            }
+          : {}),
       };
       saveMockProfile(updated);
       return NextResponse.json({
@@ -195,6 +219,15 @@ export async function PATCH(request: Request) {
       fields[U.company] = company;
       fields[U.team] = team;
     }
+    if ("age" in body) {
+      fields[U.age] = age ?? null;
+    }
+    if ("intro" in body) {
+      fields[U.intro] = intro ?? "";
+    }
+    if ("interests" in body) {
+      fields[U.interests] = interests ?? [];
+    }
 
     const updated = await updateRecord(TABLES.users, airtableId, fields);
     const mapped = mapUser(updated);
@@ -207,6 +240,14 @@ export async function PATCH(request: Request) {
       nickname,
       displayName: getDisplayName({ name, nickname }),
       ...(hasOrgFields ? { company, team } : {}),
+      ...(hasBuddyFields
+        ? {
+            age,
+            intro: intro || undefined,
+            interests:
+              interests && interests.length > 0 ? interests : undefined,
+          }
+        : {}),
     };
 
     return NextResponse.json({

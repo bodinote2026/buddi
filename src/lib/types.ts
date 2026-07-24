@@ -17,13 +17,13 @@ export interface ExploreChallenge {
 
 export interface Buddy {
   id: string;
+  /** Nickname shown on buddy cards */
   name: string;
-  age: number;
+  age?: number;
   temperature: number;
-  category: string;
-  distanceKm: number;
+  company: string;
+  team: string;
   avatarUrl: string;
-  district?: string;
   intro?: string;
   interests?: string[];
 }
@@ -46,6 +46,9 @@ export interface User {
   provider?: string;
   providerId?: string;
   email?: string;
+  age?: number;
+  intro?: string;
+  interests?: string[];
 }
 
 export interface Team {
