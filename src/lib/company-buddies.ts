@@ -75,8 +75,6 @@ function mapUserToBuddyFromUser(user: User): Buddy {
     team: user.team ?? "",
     intro: user.intro,
     interests: user.interests,
-    avatarUrl:
-      user.avatarUrl ??
-      `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(nickname || user.id)}`,
+    avatarUrl: user.avatarUrl?.trim() || undefined,
   };
 }

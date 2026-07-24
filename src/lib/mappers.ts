@@ -108,9 +108,7 @@ export function mapUserToBuddy(record: AirtableRecord): Buddy {
     team: user.team ?? "",
     intro: user.intro,
     interests: user.interests,
-    avatarUrl:
-      user.avatarUrl ??
-      `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(nickname || user.id)}`,
+    avatarUrl: user.avatarUrl?.trim() || undefined,
   };
 }
 
@@ -324,9 +322,7 @@ export function mapBuddy(record: AirtableRecord): Buddy {
       const values = asStringArray(f[B.interests]);
       return values.length > 0 ? values : undefined;
     })(),
-    avatarUrl:
-      asAttachmentUrl(f[B.avatarUrl]) ||
-      `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name || record.id)}`,
+    avatarUrl: asAttachmentUrl(f[B.avatarUrl]) || undefined,
   };
 }
 

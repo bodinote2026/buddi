@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import {
   ChevronRight,
@@ -16,6 +15,7 @@ import {
 import { Header } from "@/components/layout/Header";
 import { LoginButtons } from "@/components/auth/LoginButtons";
 import { Modal } from "@/components/ui/Modal";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useToast } from "@/components/ui/Toast";
 import {
   CONNECTED_DEVICES,
@@ -142,18 +142,13 @@ function ProfileContent({
       <Header title="프로필" showSettings onSettingsClick={openEdit} />
       <div className="space-y-6 px-5 pb-4">
         <section className="flex flex-col items-center pt-2 text-center">
-          <div className="relative h-[100px] w-[100px] overflow-hidden rounded-full border-[3px] border-primary-light bg-primary-light">
-            {user.avatarUrl && (
-              <Image
-                src={user.avatarUrl}
-                alt={`${user.displayName} 프로필 사진`}
-                fill
-                className="object-cover"
-                unoptimized
-                sizes="100px"
-              />
-            )}
-          </div>
+          <UserAvatar
+            src={user.avatarUrl}
+            alt={`${user.displayName} 프로필 사진`}
+            shape="circle"
+            className="h-[100px] w-[100px] border-[3px] border-primary-light"
+            sizes="100px"
+          />
           <h2 className="mt-3 text-[22px] font-bold text-text-primary">
             {user.displayName}
           </h2>

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import useSWR from "swr";
 import { Header } from "@/components/layout/Header";
 import { BuddyChatButton } from "@/components/buddies/BuddyChatButton";
 import { BuddyEmptyState } from "@/components/buddies/BuddyEmptyState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { INTEREST_STYLES } from "@/lib/mock-data";
 import { formatTemperature } from "@/lib/format";
 import { formatBuddyName, formatBuddyOrg } from "@/lib/buddy-display";
@@ -26,13 +26,12 @@ function BuddyListItem({ buddy }: { buddy: Buddy }) {
   return (
     <article className="rounded-2xl bg-surface p-4 shadow-[var(--shadow-card)]">
       <div className="flex gap-3">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-primary-light">
-          <Image
+        <div className="relative h-20 w-20 shrink-0">
+          <UserAvatar
             src={buddy.avatarUrl}
             alt={`${buddy.name} 프로필 사진`}
-            fill
-            className="object-cover"
-            unoptimized
+            shape="circle"
+            className="h-20 w-20"
             sizes="80px"
           />
         </div>

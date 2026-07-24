@@ -75,7 +75,7 @@ export async function POST() {
       updated.push({
         id: record.id,
         name,
-        avatarUrl: verified.avatarUrl,
+        avatarUrl: verified.avatarUrl ?? "",
       });
     }
 

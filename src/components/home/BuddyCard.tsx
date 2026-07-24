@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { formatTemperature } from "@/lib/format";
 import { formatBuddyName, formatBuddyOrg } from "@/lib/buddy-display";
 import { BuddyChatButton } from "@/components/buddies/BuddyChatButton";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import type { Buddy } from "@/lib/types";
 
 interface BuddyCardProps {
@@ -24,16 +24,15 @@ export function BuddyCard({
       }`}
     >
       <div className="relative aspect-square bg-primary-light">
-        <Image
+        <UserAvatar
           src={buddy.avatarUrl}
           alt={`${buddy.name} 프로필 사진`}
+          shape="square"
           fill
-          className="object-cover"
-          unoptimized
           sizes="(max-width: 390px) 62vw, 210px"
           priority={priority}
         />
-        <span className="absolute right-2 top-2 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-text-primary shadow-sm">
+        <span className="absolute right-2 top-2 z-10 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-text-primary shadow-sm">
           {formatTemperature(buddy.temperature)}
         </span>
       </div>

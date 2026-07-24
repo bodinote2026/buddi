@@ -23,7 +23,7 @@ export interface Buddy {
   temperature: number;
   company: string;
   team: string;
-  avatarUrl: string;
+  avatarUrl?: string;
   intro?: string;
   interests?: string[];
 }
